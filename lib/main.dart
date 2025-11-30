@@ -10,16 +10,16 @@ import 'screens/routes_screen.dart';
 import 'screens/relatorios_screen.dart';
 
 void main() {
-  runApp(const DescontinoApp());
+  runApp(const VansApp());
 }
 
-class DescontinoApp extends StatelessWidget {
-  const DescontinoApp({Key? key}) : super(key: key);
+class VansApp extends StatelessWidget {
+  const VansApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Box Leste - Descontino',
+      title: 'Box Leste - Vans',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: '/',
