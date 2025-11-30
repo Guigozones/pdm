@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryStart = Color(0xFF1BC5B7);
-  static const Color primaryEnd = Color(0xFF2DA8F7);
-  static const Color accent = Color(0xFF00C77F);
+  static const Color primaryStart = Color(0xFF2563EB);
+  static const Color primaryEnd = Color(0xFF60A5FA);
+  static const Color accent = Color(0xFFFB923C);
+  static const Color textDark = Color(0xFF1F2937);
   static final Gradient mainGradient = LinearGradient(
     colors: [primaryStart, primaryEnd],
     begin: Alignment.topCenter,
