@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'chat_screen.dart';
 
 class AgendaDetailScreen extends StatefulWidget {
   final String origin;
@@ -118,7 +119,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      '04/10/2025 às 8:00',
+                      '04/12/2025 às 8:00',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -358,7 +359,17 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     ),
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          passengerName: passenger['name'],
+                          route: '${widget.origin} → ${widget.destination}',
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -493,7 +504,18 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          passengerName: passenger['name'],
+                          route: '${widget.origin} → ${widget.destination}',
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

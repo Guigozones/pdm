@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_scaffold.dart';
+import '../widgets/index.dart';
 import '../theme/app_theme.dart';
 import 'profile_screen.dart';
 import 'vehicles_screen.dart';
@@ -41,125 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
 class _OverviewTab extends StatelessWidget {
   const _OverviewTab({Key? key}) : super(key: key);
 
-  Widget _statBox({
-    required String title,
-    required String value,
-    required String diff,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                padding: EdgeInsets.all(6),
-                child: Icon(icon, size: 16, color: iconColor),
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            diff,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.green,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tripTile({
-    required String route,
-    required String time,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  route,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: statusColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -171,7 +52,7 @@ class _OverviewTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _statBox(
+                child: StatBox(
                   title: 'Receita Hoje',
                   value: 'R\$ 2.850,00',
                   diff: '+12%',
@@ -181,7 +62,7 @@ class _OverviewTab extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _statBox(
+                child: StatBox(
                   title: 'Passageiros',
                   value: '41',
                   diff: '+8',
@@ -197,7 +78,7 @@ class _OverviewTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _statBox(
+                child: StatBox(
                   title: 'Viagens Hoje',
                   value: '3',
                   diff: '+2',
@@ -207,7 +88,7 @@ class _OverviewTab extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _statBox(
+                child: StatBox(
                   title: 'Taxa de Ocupação',
                   value: '85%',
                   diff: '+5%',
@@ -305,21 +186,21 @@ class _OverviewTab extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12),
-                _tripTile(
+                TripTile(
                   route: 'Caxias → Teresina',
                   time: '04/10/2025 às 8:00',
                   status: 'Lotada',
                   statusColor: Color(0xFF10B981),
                 ),
                 SizedBox(height: 8),
-                _tripTile(
+                TripTile(
                   route: 'Caxias → Aldeias Altas',
                   time: '04/10/2025 às 11:00',
                   status: 'Disponível',
                   statusColor: Color(0xFF3B82F6),
                 ),
                 SizedBox(height: 8),
-                _tripTile(
+                TripTile(
                   route: 'Caxias → São J. do Sóter',
                   time: '04/10/2025 às 14:00',
                   status: 'Cancelada',

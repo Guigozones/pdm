@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/index.dart';
 
 class VehiclesScreen extends StatefulWidget {
   const VehiclesScreen({Key? key}) : super(key: key);
@@ -54,7 +55,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
           SizedBox(height: 16),
 
           // Card do primeiro veículo
-          _buildVehicleCard(
+          VehicleManagementCard(
             brand: 'Mercedes-Benz Sprinter',
             plate: 'ABC-1234',
             seats: '10',
@@ -64,12 +65,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
             statusColor: Color(0xFF10B981),
             lastReview: '14/12/2025',
             amenities: ['Ar Condicionado', 'Wi-Fi', 'USB'],
+            onEdit: () => _showEditVehicleModal(context, 'Mercedes-Benz Sprinter', 'ABC-1234', '10', '2022', 'Ativo'),
+            onDelete: () {},
           ),
 
           SizedBox(height: 12),
 
           // Card do segundo veículo
-          _buildVehicleCard(
+          VehicleManagementCard(
             brand: 'Fiat Doblo',
             plate: 'ABC-1234',
             seats: '5',
@@ -79,6 +82,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
             statusColor: Color(0xFFFB923C),
             lastReview: '03/10/2025',
             amenities: ['Ar Condicionado', 'Wi-Fi', 'USB'],
+            onEdit: () => _showEditVehicleModal(context, 'Fiat Doblo', 'ABC-1234', '5', '2020', 'Manutenção'),
+            onDelete: () {},
           ),
 
           SizedBox(height: 24),
@@ -767,192 +772,4 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     super.dispose();
   }
 
-  Widget _buildVehicleCard({
-    required String brand,
-    required String plate,
-    required String seats,
-    required String year,
-    required String mileage,
-    required String status,
-    required Color statusColor,
-    required String lastReview,
-    required List<String> amenities,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      padding: EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFE0F2FE),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.all(8),
-                child: Icon(
-                  Icons.directions_car,
-                  color: AppTheme.primaryStart,
-                  size: 24,
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      brand,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      plate,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Info do veículo
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.event_seat, size: 16, color: Colors.grey.shade600),
-                    SizedBox(width: 4),
-                    Text(
-                      '$seats lugares',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
-                    SizedBox(width: 4),
-                    Text(
-                      year,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.speed, size: 16, color: Colors.grey.shade600),
-                    SizedBox(width: 4),
-                    Text(
-                      '$mileage viagens',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Commodities
-          Wrap(
-            spacing: 8,
-            children: amenities.map((amenity) {
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Text(
-                  amenity,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.primaryStart,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: 12),
-
-          // Footer com data e ações
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Próxima revisão: $lastReview',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.edit, size: 18, color: AppTheme.primaryStart),
-                onPressed: () => _showEditVehicleModal(context, brand, plate, seats, year, status),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-              SizedBox(width: 8),
-              IconButton(
-                icon: Icon(Icons.delete, size: 18, color: Colors.red),
-                onPressed: () {},
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

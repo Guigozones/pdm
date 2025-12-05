@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/index.dart';
 
 class RoutesScreen extends StatefulWidget {
   const RoutesScreen({Key? key}) : super(key: key);
@@ -55,7 +56,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
           SizedBox(height: 16),
 
           // Card de rota 1
-          _buildRouteCard(
+          RouteManagementCard(
             title: 'Caxias → Teresina',
             origin: 'Caxias',
             destination: 'Teresina',
@@ -66,12 +67,14 @@ class _RoutesScreenState extends State<RoutesScreen> {
             timeSlots: ['08:00', '14:30', '20:00'],
             status: 'Ativa',
             statusColor: Color(0xFF10B981),
+            onEdit: () => _showEditRouteModal(context, 'Caxias → Teresina', 'Caxias', 'Teresina', 'R\$ 100.00', 'Ativa'),
+            onDelete: () {},
           ),
 
           SizedBox(height: 12),
 
           // Card de rota 2
-          _buildRouteCard(
+          RouteManagementCard(
             title: 'Caxias → São João do Sóler',
             origin: 'Caxias',
             destination: 'São João do Sóler',
@@ -82,12 +85,14 @@ class _RoutesScreenState extends State<RoutesScreen> {
             timeSlots: ['08:30', '13:00', '19:00', '22:00'],
             status: 'Ativa',
             statusColor: Color(0xFF10B981),
+            onEdit: () => _showEditRouteModal(context, 'Caxias → São João do Sóler', 'Caxias', 'São João do Sóler', 'R\$ 85.00', 'Ativa'),
+            onDelete: () {},
           ),
 
           SizedBox(height: 12),
 
           // Card de rota 3
-          _buildRouteCard(
+          RouteManagementCard(
             title: 'Caxias → Aldeias Altas',
             origin: 'Caxias',
             destination: 'Aldeias Altas',
@@ -98,6 +103,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
             timeSlots: ['06:00', '12:00', '18:00'],
             status: 'Pausada',
             statusColor: Color(0xFFFB923C),
+            onEdit: () => _showEditRouteModal(context, 'Caxias → Aldeias Altas', 'Caxias', 'Aldeias Altas', 'R\$ 84.00', 'Pausada'),
+            onDelete: () {},
           ),
 
           SizedBox(height: 24),
@@ -106,221 +113,6 @@ class _RoutesScreenState extends State<RoutesScreen> {
     );
   }
 
-  Widget _buildRouteCard({
-    required String title,
-    required String origin,
-    required String destination,
-    required String passengers,
-    required String valor,
-    required String availableSeats,
-    required String duration,
-    required List<String> timeSlots,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      padding: EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Cabeçalho com título e status
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFE0F2FE),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.all(8),
-                child: Icon(
-                  Icons.location_on,
-                  color: AppTheme.primaryStart,
-                  size: 24,
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      passengers,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Informações da rota
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Valor',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      valor,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Lugares',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      availableSeats,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Duração',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      duration,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Horários disponíveis
-          Text(
-            'Horários Disponíveis:',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textDark,
-            ),
-          ),
-
-          SizedBox(height: 8),
-
-          // Chips de horários
-          Wrap(
-            spacing: 8,
-            children: timeSlots.map((time) {
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Color(0xFFE0F2FE),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryStart,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: 12),
-
-          // Botões de ação
-          Row(
-            children: [
-              Expanded(
-                child: IconButton(
-                  icon: Icon(Icons.edit, size: 20, color: AppTheme.primaryStart),
-                  onPressed: () => _showEditRouteModal(context, title, origin, destination, valor, status),
-                ),
-              ),
-              Expanded(
-                child: IconButton(
-                  icon: Icon(Icons.delete, size: 20, color: Colors.red),
-                  onPressed: () {},
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showAddRouteModal(BuildContext context) {
     originController.clear();

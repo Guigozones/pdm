@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/index.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -119,23 +120,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 16),
 
             // Informações Pessoais
-            _sectionCard(
+            SectionCard(
               title: 'Informações Pessoais',
               child: Column(
                 children: [
-                  _infoRow(
+                  InfoRow(
                     icon: Icons.email,
                     label: 'Email',
                     value: 'joao.gomes@email.com',
                   ),
                   SizedBox(height: 12),
-                  _infoRow(
+                  InfoRow(
                     icon: Icons.phone,
                     label: 'Telefone',
                     value: '[55] 99999-9999',
                   ),
                   SizedBox(height: 12),
-                  _infoRow(
+                  InfoRow(
                     icon: Icons.location_on,
                     label: 'Localização',
                     value: 'Caxias, MA',
@@ -153,23 +154,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 12),
 
             // Documentos
-            _sectionCard(
+            SectionCard(
               title: 'Documentos',
               child: Column(
                 children: [
-                  _documentRow(
+                  DocumentRow(
                     label: 'CNH',
                     status: 'Válido',
                     statusColor: Color(0xFF10B981),
                   ),
                   SizedBox(height: 12),
-                  _documentRow(
+                  DocumentRow(
                     label: 'RG',
                     status: 'Válido',
                     statusColor: Color(0xFF10B981),
                   ),
                   SizedBox(height: 12),
-                  _documentRow(
+                  DocumentRow(
                     label: 'CRL-V',
                     status: 'Vence em breve',
                     statusColor: Color(0xFFFB923C),
@@ -185,25 +186,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.white,
               child: Column(
                 children: [
-                  _menuItem(
+                  MenuItem(
                     icon: Icons.credit_card,
                     label: 'Planos e Assinatura',
                     onTap: () {},
                   ),
                   Divider(height: 1),
-                  _menuItem(
+                  MenuItem(
                     icon: Icons.settings,
                     label: 'Configurações',
                     onTap: () {},
                   ),
                   Divider(height: 1),
-                  _menuItem(
+                  MenuItem(
                     icon: Icons.help,
                     label: 'Ajuda e Suporte',
                     onTap: () {},
                   ),
                   Divider(height: 1),
-                  _menuItem(
+                  MenuItem(
                     icon: Icons.logout,
                     label: 'Sair da Conta',
                     onTap: () {
@@ -218,162 +219,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             SizedBox(height: 24),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionCard({
-    required String title,
-    required Widget child,
-    List<Widget>? actions,
-  }) {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              if (actions != null)
-                Row(
-                  children: actions,
-                ),
-            ],
-          ),
-          SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.grey.shade500),
-        SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _documentRow({
-    required String label,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.description, size: 18, color: Colors.grey.shade500),
-            SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textDark,
-              ),
-            ),
-          ],
-        ),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            status,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: statusColor,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _menuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? iconColor,
-    Color? textColor,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: iconColor ?? Colors.grey.shade600,
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: textColor ?? AppTheme.textDark,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: Colors.grey.shade400,
-              ),
-            ],
-          ),
         ),
       ),
     );
