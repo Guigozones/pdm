@@ -8,8 +8,7 @@ import '../screens/vehicles_screen.dart';
 import '../screens/routes_screen.dart';
 import '../screens/relatorios_screen.dart';
 
-/// Definição de todas as rotas da aplicação
-/// Centraliza a navegação em um único lugar para facilitar manutenção
+
 class AppRoutes {
   // Rotas da aplicação
   static const String login = '/';
