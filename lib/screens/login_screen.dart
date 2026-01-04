@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -10,10 +11,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool isLogin = true;
+  bool isLoading = false;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +39,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? _LoginForm(
                             emailController: emailController,
                             passwordController: passwordController,
-                            onLogin: () => Navigator.pushReplacementNamed(context, '/home'),
+                            isLoading: isLoading,
+                            onLogin: _handleLogin,
                           )
                         : _RegisterForm(
                             nameController: nameController,
                             emailController: emailController,
                             passwordController: passwordController,
                             confirmPasswordController: confirmPasswordController,
-                            onRegister: () => Navigator.pushReplacementNamed(context, '/document-verification'),
+                            isLoading: isLoading,
+                            onRegister: _handleRegister,
                           ),
                   ),
                   SizedBox(height: 40),
@@ -51,6 +57,99 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Processa o login
+  Future<void> _handleLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    // Validações básicas
+    if (email.isEmpty || password.isEmpty) {
+      _showError('Preencha todos os campos');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final user = await _authService.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (user != null && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showError('Erro ao fazer login. Verifique suas credenciais.');
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  /// Processa o cadastro
+  Future<void> _handleRegister() async {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    // Validações
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showError('Preencha todos os campos');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showError('As senhas não coincidem');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final user = await _authService.registerWithEmailAndPassword(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      if (user != null && mounted) {
+        Navigator.pushReplacementNamed(context, '/document-verification');
+      } else {
+        _showError('Erro ao criar conta. Tente novamente.');
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  /// Exibe mensagem de erro
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -225,11 +324,13 @@ class _ToggleTab extends StatelessWidget {
 class _LoginForm extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
+  final bool isLoading;
   final VoidCallback onLogin;
 
   const _LoginForm({
     required this.emailController,
     required this.passwordController,
+    required this.isLoading,
     required this.onLogin,
   });
 
@@ -241,6 +342,7 @@ class _LoginForm extends StatelessWidget {
           label: 'E-mail',
           controller: emailController,
           hintText: 'seu@email.com',
+          keyboardType: TextInputType.emailAddress,
         ),
         SizedBox(height: 16),
         _FormField(
@@ -252,6 +354,7 @@ class _LoginForm extends StatelessWidget {
         SizedBox(height: 20),
         _SubmitButton(
           label: 'Entrar',
+          isLoading: isLoading,
           onPressed: onLogin,
         ),
         SizedBox(height: 12),
@@ -275,6 +378,7 @@ class _RegisterForm extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final bool isLoading;
   final VoidCallback onRegister;
 
   const _RegisterForm({
@@ -282,6 +386,7 @@ class _RegisterForm extends StatelessWidget {
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.isLoading,
     required this.onRegister,
   });
 
@@ -299,12 +404,13 @@ class _RegisterForm extends StatelessWidget {
           label: 'E-mail',
           controller: emailController,
           hintText: 'seu@email.com',
+          keyboardType: TextInputType.emailAddress,
         ),
         SizedBox(height: 16),
         _FormField(
           label: 'Senha',
           controller: passwordController,
-          hintText: 'Crie uma senha',
+          hintText: 'Crie uma senha (mínimo 6 caracteres)',
           obscureText: true,
         ),
         SizedBox(height: 16),
@@ -317,6 +423,7 @@ class _RegisterForm extends StatelessWidget {
         SizedBox(height: 20),
         _SubmitButton(
           label: 'Cadastrar',
+          isLoading: isLoading,
           onPressed: onRegister,
         ),
       ],
@@ -330,12 +437,14 @@ class _FormField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final bool obscureText;
+  final TextInputType keyboardType;
 
   const _FormField({
     required this.label,
     required this.controller,
     required this.hintText,
     this.obscureText = false,
+    this.keyboardType = TextInputType.text,
   });
 
   @override
@@ -355,6 +464,7 @@ class _FormField extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,
@@ -371,14 +481,16 @@ class _FormField extends StatelessWidget {
   }
 }
 
-/// Botão de envio
+/// Botão de envio com loading
 class _SubmitButton extends StatelessWidget {
   final String label;
+  final bool isLoading;
   final VoidCallback onPressed;
 
   const _SubmitButton({
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -394,11 +506,20 @@ class _SubmitButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: onPressed,
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        onPressed: isLoading ? null : onPressed,
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(
+                label,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }

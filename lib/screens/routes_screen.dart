@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/index.dart';
+import '../models/route_model.dart';
+import '../services/route_service.dart';
 
 class RoutesScreen extends StatefulWidget {
   const RoutesScreen({Key? key}) : super(key: key);
@@ -10,117 +14,187 @@ class RoutesScreen extends StatefulWidget {
 }
 
 class _RoutesScreenState extends State<RoutesScreen> {
+  final RouteService _routeService = RouteService();
+  final _user = FirebaseAuth.instance.currentUser;
+
   final originController = TextEditingController();
   final destinationController = TextEditingController();
   final valueController = TextEditingController();
   final capacityController = TextEditingController();
+  final availableSeatsController = TextEditingController();
+  final durationController = TextEditingController();
   final timeslotsController = TextEditingController();
+  final tripsPerWeekController = TextEditingController();
   String selectedStatus = 'Ativa';
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Botão de cadastro de nova rota
-          SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryStart,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () => _showAddRouteModal(context),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Cadastrar Nova Rota',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Card de rota 1
-          RouteManagementCard(
-            title: 'Caxias → Teresina',
-            origin: 'Caxias',
-            destination: 'Teresina',
-            passengers: '21 viagens/semana',
-            valor: 'R\$ 100.00',
-            availableSeats: '3 lugares',
-            duration: '1h 10min',
-            timeSlots: ['08:00', '14:30', '20:00'],
-            status: 'Ativa',
-            statusColor: Color(0xFF10B981),
-            onEdit: () => _showEditRouteModal(context, 'Caxias → Teresina', 'Caxias', 'Teresina', 'R\$ 100.00', 'Ativa'),
-            onDelete: () {},
-          ),
-
-          SizedBox(height: 12),
-
-          // Card de rota 2
-          RouteManagementCard(
-            title: 'Caxias → São João do Sóler',
-            origin: 'Caxias',
-            destination: 'São João do Sóler',
-            passengers: '21 viagens/semana',
-            valor: 'R\$ 85.00',
-            availableSeats: '1 lugar',
-            duration: '50min',
-            timeSlots: ['08:30', '13:00', '19:00', '22:00'],
-            status: 'Ativa',
-            statusColor: Color(0xFF10B981),
-            onEdit: () => _showEditRouteModal(context, 'Caxias → São João do Sóler', 'Caxias', 'São João do Sóler', 'R\$ 85.00', 'Ativa'),
-            onDelete: () {},
-          ),
-
-          SizedBox(height: 12),
-
-          // Card de rota 3
-          RouteManagementCard(
-            title: 'Caxias → Aldeias Altas',
-            origin: 'Caxias',
-            destination: 'Aldeias Altas',
-            passengers: '18 viagens/semana',
-            valor: 'R\$ 84.00',
-            availableSeats: '4 lugares',
-            duration: '1h 25min',
-            timeSlots: ['06:00', '12:00', '18:00'],
-            status: 'Pausada',
-            statusColor: Color(0xFFFB923C),
-            onEdit: () => _showEditRouteModal(context, 'Caxias → Aldeias Altas', 'Caxias', 'Aldeias Altas', 'R\$ 84.00', 'Pausada'),
-            onDelete: () {},
-          ),
-
-          SizedBox(height: 24),
-        ],
-      ),
-    );
+  void dispose() {
+    originController.dispose();
+    destinationController.dispose();
+    valueController.dispose();
+    capacityController.dispose();
+    availableSeatsController.dispose();
+    durationController.dispose();
+    timeslotsController.dispose();
+    tripsPerWeekController.dispose();
+    super.dispose();
   }
 
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Ativa':
+        return const Color(0xFF10B981);
+      case 'Pausada':
+        return const Color(0xFFFB923C);
+      case 'Inativa':
+        return const Color(0xFFEF4444);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Center(child: Text('Usuário não autenticado'));
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _routeService.watchRoutesByOwner(_user!.uid),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Erro ao carregar rotas: ${snapshot.error}'),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final routes = snapshot.data?.docs ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Botão de cadastro de nova rota
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryStart,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => _showAddRouteModal(context),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Cadastrar Nova Rota',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Lista de rotas ou mensagem de lista vazia
+              if (routes.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.route_outlined,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhuma rota cadastrada',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Clique no botão acima para cadastrar sua primeira rota.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ...routes.map((doc) {
+                  final route = RouteModel.fromFirestore(doc);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: RouteManagementCard(
+                      title: route.title,
+                      origin: route.origin,
+                      destination: route.destination,
+                      passengers: route.tripsText,
+                      valor: route.formattedPrice,
+                      availableSeats: route.seatsText,
+                      duration: route.duration.isNotEmpty ? route.duration : 'N/A',
+                      timeSlots: route.timeSlots,
+                      status: route.status,
+                      statusColor: _getStatusColor(route.status),
+                      onEdit: () => _showEditRouteModal(context, route),
+                      onDelete: () => _showDeleteConfirmation(context, route),
+                    ),
+                  );
+                }).toList(),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void _showAddRouteModal(BuildContext context) {
     originController.clear();
     destinationController.clear();
     valueController.clear();
     capacityController.clear();
+    availableSeatsController.clear();
+    durationController.clear();
     timeslotsController.clear();
+    tripsPerWeekController.clear();
     selectedStatus = 'Ativa';
+
+    bool isLoading = false;
 
     showDialog(
       context: context,
@@ -132,7 +206,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -141,8 +215,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Nota Rota',
+                          const Text(
+                            'Nova Rota',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -151,171 +225,110 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           ),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
-                            child: Icon(Icons.close, size: 24),
+                            child: const Icon(Icons.close, size: 24),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Origem e Destino em linha
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Origem:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: originController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Caxias',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Origem:',
+                              originController,
+                              'Caxias',
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Destino:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: destinationController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Teresina',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Destino:',
+                              destinationController,
+                              'Teresina',
                             ),
                           ),
                         ],
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
                       // Valor e Capacidade em linha
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Valor:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: valueController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: '100',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Valor (R\$):',
+                              valueController,
+                              '100',
+                              isNumber: true,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Capacidade:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: capacityController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: '10',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Capacidade:',
+                              capacityController,
+                              '10',
+                              isNumber: true,
                             ),
                           ),
                         ],
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                      // Horários e Status em linha
+                      // Lugares disponíveis e Duração
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Horários:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: timeslotsController,
-                                  decoration: InputDecoration(
-                                    hintText: '08:00, 14:30, 20:00',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Lugares Disp.:',
+                              availableSeatsController,
+                              '5',
+                              isNumber: true,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              'Duração:',
+                              durationController,
+                              '1h 30min',
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Horários
+                      _buildTextField(
+                        'Horários (separados por vírgula):',
+                        timeslotsController,
+                        '08:00, 14:30, 20:00',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Viagens por semana e Status
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Viagens/semana:',
+                              tripsPerWeekController,
+                              '21',
+                              isNumber: true,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'Status:',
                                   style: TextStyle(
                                     fontSize: 13,
@@ -323,14 +336,17 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     color: AppTheme.textDark,
                                   ),
                                 ),
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                                 DropdownButtonFormField<String>(
                                   value: selectedStatus,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                   ),
                                   items: ['Ativa', 'Pausada', 'Inativa']
                                       .map((status) => DropdownMenuItem(
@@ -350,7 +366,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         ],
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Botões de ação
                       Row(
@@ -360,37 +376,94 @@ class _RoutesScreenState extends State<RoutesScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryStart,
                                 foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text(
-                                'Salvar Rota',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      if (originController.text.isEmpty ||
+                                          destinationController.text.isEmpty) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Preencha origem e destino'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      setModalState(() => isLoading = true);
+
+                                      try {
+                                        final timeSlots = timeslotsController.text
+                                            .split(',')
+                                            .map((t) => t.trim())
+                                            .where((t) => t.isNotEmpty)
+                                            .toList();
+
+                                        final route = RouteModel(
+                                          ownerId: _user!.uid,
+                                          origin: originController.text.trim(),
+                                          destination: destinationController.text.trim(),
+                                          price: double.tryParse(valueController.text) ?? 0,
+                                          capacity: int.tryParse(capacityController.text) ?? 0,
+                                          availableSeats: int.tryParse(availableSeatsController.text) ?? 0,
+                                          duration: durationController.text.trim(),
+                                          timeSlots: timeSlots,
+                                          tripsPerWeek: int.tryParse(tripsPerWeekController.text) ?? 0,
+                                          status: selectedStatus,
+                                        );
+
+                                        await _routeService.addRoute(route);
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Rota cadastrada com sucesso!'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Erro ao cadastrar: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      } finally {
+                                        setModalState(() => isLoading = false);
+                                      }
+                                    },
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Salvar Rota',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
                               onPressed: () => Navigator.pop(context),
-                              child: Text(
+                              child: const Text(
                                 'Cancelar',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -407,13 +480,18 @@ class _RoutesScreenState extends State<RoutesScreen> {
     );
   }
 
-  void _showEditRouteModal(BuildContext context, String title, String origin, String destination, String valor, String status) {
-    originController.text = origin;
-    destinationController.text = destination;
-    valueController.text = valor.replaceAll('R\$ ', '').replaceAll('.00', '');
-    capacityController.text = '10';
-    timeslotsController.text = '08:00, 14:30, 20:00';
-    selectedStatus = status;
+  void _showEditRouteModal(BuildContext context, RouteModel route) {
+    originController.text = route.origin;
+    destinationController.text = route.destination;
+    valueController.text = route.price.toStringAsFixed(0);
+    capacityController.text = route.capacity.toString();
+    availableSeatsController.text = route.availableSeats.toString();
+    durationController.text = route.duration;
+    timeslotsController.text = route.timeSlots.join(', ');
+    tripsPerWeekController.text = route.tripsPerWeek.toString();
+    selectedStatus = route.status;
+
+    bool isLoading = false;
 
     showDialog(
       context: context,
@@ -425,205 +503,129 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Icon(Icons.close, size: 24),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Edição De Rota',
+                          const Text(
+                            'Editar Rota',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textDark,
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            '$origin → $destination',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textDark,
-                            ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(Icons.close, size: 24),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Origem e Destino em linha
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Origem:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: originController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Caxias',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Origem:',
+                              originController,
+                              'Caxias',
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Destino:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: destinationController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Teresina',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Destino:',
+                              destinationController,
+                              'Teresina',
                             ),
                           ),
                         ],
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
                       // Valor e Capacidade em linha
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Valor:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: valueController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: '100',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Valor (R\$):',
+                              valueController,
+                              '100',
+                              isNumber: true,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Capacidade:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: capacityController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: '10',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Capacidade:',
+                              capacityController,
+                              '10',
+                              isNumber: true,
                             ),
                           ),
                         ],
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                      // Horários e Status em linha
+                      // Lugares disponíveis e Duração
                       Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Horários:',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                TextField(
-                                  controller: timeslotsController,
-                                  decoration: InputDecoration(
-                                    hintText: '08:00, 14:30, 20:00',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                ),
-                              ],
+                            child: _buildTextField(
+                              'Lugares Disp.:',
+                              availableSeatsController,
+                              '5',
+                              isNumber: true,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              'Duração:',
+                              durationController,
+                              '1h 30min',
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Horários
+                      _buildTextField(
+                        'Horários (separados por vírgula):',
+                        timeslotsController,
+                        '08:00, 14:30, 20:00',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Viagens por semana e Status
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Viagens/semana:',
+                              tripsPerWeekController,
+                              '21',
+                              isNumber: true,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'Status:',
                                   style: TextStyle(
                                     fontSize: 13,
@@ -631,14 +633,17 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     color: AppTheme.textDark,
                                   ),
                                 ),
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                                 DropdownButtonFormField<String>(
                                   value: selectedStatus,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                   ),
                                   items: ['Ativa', 'Pausada', 'Inativa']
                                       .map((status) => DropdownMenuItem(
@@ -658,7 +663,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         ],
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Botões de ação
                       Row(
@@ -668,37 +673,96 @@ class _RoutesScreenState extends State<RoutesScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryStart,
                                 foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text(
-                                'Salvar Alterações',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      if (originController.text.isEmpty ||
+                                          destinationController.text.isEmpty) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Preencha origem e destino'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      setModalState(() => isLoading = true);
+
+                                      try {
+                                        final timeSlots = timeslotsController.text
+                                            .split(',')
+                                            .map((t) => t.trim())
+                                            .where((t) => t.isNotEmpty)
+                                            .toList();
+
+                                        final updatedRoute = RouteModel(
+                                          id: route.id,
+                                          ownerId: route.ownerId,
+                                          origin: originController.text.trim(),
+                                          destination: destinationController.text.trim(),
+                                          price: double.tryParse(valueController.text) ?? 0,
+                                          capacity: int.tryParse(capacityController.text) ?? 0,
+                                          availableSeats: int.tryParse(availableSeatsController.text) ?? 0,
+                                          duration: durationController.text.trim(),
+                                          timeSlots: timeSlots,
+                                          tripsPerWeek: int.tryParse(tripsPerWeekController.text) ?? 0,
+                                          status: selectedStatus,
+                                          createdAt: route.createdAt,
+                                        );
+
+                                        await _routeService.updateRoute(route.id!, updatedRoute);
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Rota atualizada com sucesso!'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Erro ao atualizar: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      } finally {
+                                        setModalState(() => isLoading = false);
+                                      }
+                                    },
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Salvar Alterações',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
                               onPressed: () => Navigator.pop(context),
-                              child: Text(
-                                'Descartar',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -715,13 +779,82 @@ class _RoutesScreenState extends State<RoutesScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    originController.dispose();
-    destinationController.dispose();
-    valueController.dispose();
-    capacityController.dispose();
-    timeslotsController.dispose();
-    super.dispose();
+  void _showDeleteConfirmation(BuildContext context, RouteModel route) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar exclusão'),
+        content: Text('Deseja realmente excluir a rota "${route.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              try {
+                await _routeService.deleteRoute(route.id!);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Rota excluída com sucesso!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Erro ao excluir: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    String hint, {
+    bool isNumber = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textDark,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
