@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../widgets/index.dart';
 import '../models/route_model.dart';
+import '../models/vehicle_model.dart';
 import '../services/route_service.dart';
+import '../services/vehicle_service.dart';
 
 class RoutesScreen extends StatefulWidget {
   const RoutesScreen({Key? key}) : super(key: key);
@@ -15,6 +17,7 @@ class RoutesScreen extends StatefulWidget {
 
 class _RoutesScreenState extends State<RoutesScreen> {
   final RouteService _routeService = RouteService();
+  final VehicleService _vehicleService = VehicleService();
   final _user = FirebaseAuth.instance.currentUser;
 
   final originController = TextEditingController();
@@ -27,6 +30,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
   final tripsPerWeekController = TextEditingController();
   String selectedStatus = 'Ativa';
   List<String> selectedWeekDays = [];
+  VehicleModel? selectedVehicle;
 
   static const List<String> allWeekDays = [
     'Seg',
@@ -176,6 +180,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       duration: route.duration.isNotEmpty
                           ? route.duration
                           : 'N/A',
+                      vehicleName: route.vehicleName,
                       timeSlots: route.timeSlots,
                       weekDays: route.weekDays,
                       status: route.status,
@@ -205,14 +210,25 @@ class _RoutesScreenState extends State<RoutesScreen> {
     tripsPerWeekController.clear();
     selectedStatus = 'Ativa';
     selectedWeekDays = [];
+    selectedVehicle = null;
 
     bool isLoading = false;
+    List<VehicleModel> vehicles = [];
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            // Carrega os veículos do usuário
+            if (vehicles.isEmpty && _user != null) {
+              _vehicleService.getVehiclesByOwner(_user.uid).then((v) {
+                setModalState(() {
+                  vehicles = v.where((veh) => veh.status == 'Ativo').toList();
+                });
+              });
+            }
+
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -266,7 +282,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Valor e Capacidade em linha
+                      // Valor e Duração em linha
                       Row(
                         children: [
                           Expanded(
@@ -280,10 +296,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildTextField(
-                              'Capacidade:',
-                              capacityController,
-                              '10',
-                              isNumber: true,
+                              'Duração:',
+                              durationController,
+                              '1h 30min',
                             ),
                           ),
                         ],
@@ -291,23 +306,92 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Lugares disponíveis e Duração
+                      // Seleção de Veículo (substitui Capacidade)
                       Row(
                         children: [
                           Expanded(
-                            child: _buildTextField(
-                              'Lugares Disp.:',
-                              availableSeatsController,
-                              '5',
-                              isNumber: true,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Veículo:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                DropdownButtonFormField<VehicleModel>(
+                                  value: selectedVehicle,
+                                  isExpanded: true,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    hintText: vehicles.isEmpty 
+                                        ? 'Nenhum veículo' 
+                                        : 'Selecione',
+                                  ),
+                                  items: vehicles.map((vehicle) {
+                                    return DropdownMenuItem(
+                                      value: vehicle,
+                                      child: Text(
+                                        '${vehicle.fullName} (${vehicle.seats})',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (vehicle) {
+                                    setModalState(() {
+                                      selectedVehicle = vehicle;
+                                      if (vehicle != null) {
+                                        capacityController.text = vehicle.seats.toString();
+                                        availableSeatsController.text = vehicle.seats.toString();
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildTextField(
-                              'Duração:',
-                              durationController,
-                              '1h 30min',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Vagas:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextFormField(
+                                  controller: availableSeatsController,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    hintText: '-',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey[100],
+                                  ),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -478,6 +562,20 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                         return;
                                       }
 
+                                      if (selectedVehicle == null) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Selecione um veículo',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
                                       setModalState(() => isLoading = true);
 
                                       try {
@@ -490,6 +588,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                                         final route = RouteModel(
                                           ownerId: _user!.uid,
+                                          vehicleId: selectedVehicle!.id,
+                                          vehicleName: selectedVehicle!.fullName,
                                           origin: originController.text.trim(),
                                           destination: destinationController
                                               .text
@@ -499,16 +599,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                                 valueController.text,
                                               ) ??
                                               0,
-                                          capacity:
-                                              int.tryParse(
-                                                capacityController.text,
-                                              ) ??
-                                              0,
-                                          availableSeats:
-                                              int.tryParse(
-                                                availableSeatsController.text,
-                                              ) ??
-                                              0,
+                                          capacity: selectedVehicle!.seats,
+                                          availableSeats: selectedVehicle!.seats,
                                           duration: durationController.text
                                               .trim(),
                                           timeSlots: timeSlots,
@@ -607,14 +699,36 @@ class _RoutesScreenState extends State<RoutesScreen> {
     tripsPerWeekController.text = route.tripsPerWeek.toString();
     selectedStatus = route.status;
     selectedWeekDays = List<String>.from(route.weekDays);
+    selectedVehicle = null;
 
     bool isLoading = false;
+    List<VehicleModel> vehicles = [];
+    String? currentVehicleId = route.vehicleId;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            // Carrega os veículos do usuário
+            if (vehicles.isEmpty && _user != null) {
+              _vehicleService.getVehiclesByOwner(_user.uid).then((v) {
+                setModalState(() {
+                  vehicles = v.where((veh) => veh.status == 'Ativo').toList();
+                  // Seleciona o veículo atual da rota
+                  if (currentVehicleId != null) {
+                    try {
+                      selectedVehicle = vehicles.firstWhere(
+                        (veh) => veh.id == currentVehicleId,
+                      );
+                    } catch (e) {
+                      selectedVehicle = null;
+                    }
+                  }
+                });
+              });
+            }
+
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -668,7 +782,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Valor e Capacidade em linha
+                      // Valor e Duração em linha
                       Row(
                         children: [
                           Expanded(
@@ -682,10 +796,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildTextField(
-                              'Capacidade:',
-                              capacityController,
-                              '10',
-                              isNumber: true,
+                              'Duração:',
+                              durationController,
+                              '1h 30min',
                             ),
                           ),
                         ],
@@ -693,23 +806,90 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Lugares disponíveis e Duração
+                      // Seleção de Veículo e Vagas disponíveis
                       Row(
                         children: [
                           Expanded(
-                            child: _buildTextField(
-                              'Lugares Disp.:',
-                              availableSeatsController,
-                              '5',
-                              isNumber: true,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Veículo:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                DropdownButtonFormField<VehicleModel>(
+                                  value: selectedVehicle,
+                                  isExpanded: true,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    hintText: route.vehicleName ?? 'Selecione',
+                                  ),
+                                  items: vehicles.map((vehicle) {
+                                    return DropdownMenuItem(
+                                      value: vehicle,
+                                      child: Text(
+                                        '${vehicle.fullName} (${vehicle.seats})',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (vehicle) {
+                                    setModalState(() {
+                                      selectedVehicle = vehicle;
+                                      if (vehicle != null) {
+                                        capacityController.text = vehicle.seats.toString();
+                                        availableSeatsController.text = vehicle.seats.toString();
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildTextField(
-                              'Duração:',
-                              durationController,
-                              '1h 30min',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Vagas:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextFormField(
+                                  controller: availableSeatsController,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    hintText: route.availableSeats.toString(),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey[100],
+                                  ),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -890,9 +1070,17 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                             .where((t) => t.isNotEmpty)
                                             .toList();
 
+                                        // Usa o veículo selecionado ou mantém o atual
+                                        final vehicleId = selectedVehicle?.id ?? route.vehicleId;
+                                        final vehicleName = selectedVehicle?.fullName ?? route.vehicleName;
+                                        final capacity = selectedVehicle?.seats ?? 
+                                            int.tryParse(capacityController.text) ?? route.capacity;
+
                                         final updatedRoute = RouteModel(
                                           id: route.id,
                                           ownerId: route.ownerId,
+                                          vehicleId: vehicleId,
+                                          vehicleName: vehicleName,
                                           origin: originController.text.trim(),
                                           destination: destinationController
                                               .text
@@ -902,11 +1090,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                                 valueController.text,
                                               ) ??
                                               0,
-                                          capacity:
-                                              int.tryParse(
-                                                capacityController.text,
-                                              ) ??
-                                              0,
+                                          capacity: capacity,
                                           availableSeats:
                                               int.tryParse(
                                                 availableSeatsController.text,

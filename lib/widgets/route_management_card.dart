@@ -9,6 +9,7 @@ class RouteManagementCard extends StatelessWidget {
   final String valor;
   final String availableSeats;
   final String duration;
+  final String? vehicleName;
   final List<String> timeSlots;
   final List<String> weekDays;
   final String status;
@@ -25,6 +26,7 @@ class RouteManagementCard extends StatelessWidget {
     required this.valor,
     required this.availableSeats,
     required this.duration,
+    this.vehicleName,
     required this.timeSlots,
     this.weekDays = const [],
     required this.status,
@@ -81,6 +83,30 @@ class RouteManagementCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
+                    if (vehicleName != null && vehicleName!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.directions_car,
+                              size: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                vehicleName!,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),

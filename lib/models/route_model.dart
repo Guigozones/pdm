@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RouteModel {
   final String? id;
   final String ownerId;
+  final String? vehicleId; // ID do veículo atribuído à rota
+  final String? vehicleName; // Nome do veículo para exibição
   final String origin;
   final String destination;
   final double price;
@@ -19,6 +21,8 @@ class RouteModel {
   RouteModel({
     this.id,
     required this.ownerId,
+    this.vehicleId,
+    this.vehicleName,
     required this.origin,
     required this.destination,
     required this.price,
@@ -51,6 +55,8 @@ class RouteModel {
     return RouteModel(
       id: doc.id,
       ownerId: data['ownerId'] ?? '',
+      vehicleId: data['vehicleId'],
+      vehicleName: data['vehicleName'],
       origin: data['origin'] ?? '',
       destination: data['destination'] ?? '',
       price: (data['price'] ?? 0).toDouble(),
@@ -70,6 +76,8 @@ class RouteModel {
   Map<String, dynamic> toFirestore() {
     return {
       'ownerId': ownerId,
+      'vehicleId': vehicleId,
+      'vehicleName': vehicleName,
       'origin': origin,
       'destination': destination,
       'price': price,
@@ -87,6 +95,8 @@ class RouteModel {
   RouteModel copyWith({
     String? id,
     String? ownerId,
+    String? vehicleId,
+    String? vehicleName,
     String? origin,
     String? destination,
     double? price,
@@ -102,6 +112,8 @@ class RouteModel {
     return RouteModel(
       id: id ?? this.id,
       ownerId: ownerId ?? this.ownerId,
+      vehicleId: vehicleId ?? this.vehicleId,
+      vehicleName: vehicleName ?? this.vehicleName,
       origin: origin ?? this.origin,
       destination: destination ?? this.destination,
       price: price ?? this.price,

@@ -32,6 +32,8 @@ class RouteService {
   // Atualizar rota
   Future<void> updateRoute(String routeId, RouteModel route) async {
     await _firestore.collection(_collection).doc(routeId).update({
+      'vehicleId': route.vehicleId,
+      'vehicleName': route.vehicleName,
       'origin': route.origin,
       'destination': route.destination,
       'price': route.price,
@@ -39,6 +41,7 @@ class RouteService {
       'availableSeats': route.availableSeats,
       'duration': route.duration,
       'timeSlots': route.timeSlots,
+      'weekDays': route.weekDays,
       'status': route.status,
       'tripsPerWeek': route.tripsPerWeek,
     });
