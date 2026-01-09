@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/chat_service.dart';
+import '../services/booking_service.dart';
+import '../models/booking_model.dart';
 import 'chat_screen.dart';
 
 class AgendaDetailScreen extends StatefulWidget {
+  final String routeId;
   final String origin;
   final String destination;
   final String value;
   final int capacity;
   final int available;
   final String time;
+  final String timeSlot;
+  final DateTime selectedDate;
 
   const AgendaDetailScreen({
     Key? key,
+    required this.routeId,
     required this.origin,
     required this.destination,
     required this.value,
     required this.capacity,
     required this.available,
     required this.time,
+    required this.timeSlot,
+    required this.selectedDate,
   }) : super(key: key);
 
   @override
@@ -26,57 +34,14 @@ class AgendaDetailScreen extends StatefulWidget {
 }
 
 class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
-  final List<Map<String, dynamic>> passengers = [
-    {
-      'name': 'Marília Mendoça',
-      'seat': 'Assento 1',
-      'paid': true,
-      'phone': '(99) 99999-9999',
-      'email': 'marilia@email.com',
-      'address': 'Rua 01, nº 100, Centro - Caxias-MA',
-    },
-    {
-      'name': 'Henrique Juliano',
-      'seat': 'Assento 1',
-      'paid': true,
-      'phone': '(99) 98888-8888',
-      'email': 'henrique@email.com',
-      'address': 'Rua 02, nº 200, Centro - Caxias-MA',
-    },
-    {
-      'name': 'João Gomes',
-      'seat': 'Assento 1',
-      'paid': true,
-      'phone': '(99) 97777-7777',
-      'email': 'joao@email.com',
-      'address': 'Rua 03, nº 300, Centro - Caxias-MA',
-    },
-    {
-      'name': 'Jorge Mateus',
-      'seat': 'Assento 1',
-      'paid': false,
-      'phone': '(99) 96666-6666',
-      'email': 'jorge@email.com',
-      'address': 'Rua 04, nº 400, Centro - Caxias-MA',
-    },
-    {
-      'name': 'Victor Leo',
-      'seat': 'Assento 1',
-      'paid': false,
-      'phone': '(99) 95555-5555',
-      'email': 'victor@email.com',
-      'address': 'Rua 05, nº 500, Centro - Caxias-MA',
-    },
-  ];
+  final BookingService _bookingService = BookingService();
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
 
   @override
   Widget build(BuildContext context) {
-    int bookedSeats = widget.capacity - widget.available;
-    double occupancyRate = widget.capacity > 0
-        ? (bookedSeats / widget.capacity) * 100
-        : 0;
-    int confirmedReservations = passengers.where((p) => p['paid']).length;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Agenda'),
@@ -93,141 +58,206 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header Card
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
+      body: StreamBuilder<List<BookingModel>>(
+        // Temporariamente usando sem filtro de data para debug
+        stream: _bookingService.watchAllBookingsByRoute(widget.routeId),
+        builder: (context, snapshot) {
+          // Debug
+          print('🎫 RouteId: ${widget.routeId}');
+          print('📅 Data: ${widget.selectedDate}');
+          print('📊 Snapshot: ${snapshot.connectionState}');
+          if (snapshot.hasError) {
+            print('❌ Erro: ${snapshot.error}');
+          }
+          
+          final bookings = snapshot.data ?? [];
+          final activeBookings = bookings
+              .where((b) => b.status != 'cancelado')
+              .toList();
+
+          int bookedSeats = activeBookings.length;
+          double occupancyRate = widget.capacity > 0
+              ? (bookedSeats / widget.capacity) * 100
+              : 0;
+          int paidPassengers = activeBookings.where((b) => b.isPaid).length;
+
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header Card
+                Container(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200, width: 1.5),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '${widget.origin} → ${widget.destination}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textDark,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '04/12/2025 às 8:00',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.shade200,
+                        width: 1.5,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Statistics Cards
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _statCard(
-                          title: 'Assentos Preenchidos',
-                          value: '$bookedSeats/${widget.capacity}',
-                          icon: Icons.event_seat,
-                          iconColor: Color(0xFF3B82F6),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          title: 'Passageiros Pagos',
-                          value: '${confirmedReservations}/5',
-                          icon: Icons.attach_money,
-                          iconColor: Color(0xFF10B981),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _statCard(
-                          title: 'Taxa de Ocupação',
-                          value: '${occupancyRate.toStringAsFixed(0)}%',
-                          icon: Icons.trending_up,
-                          iconColor: Color(0xFF06B6D4),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          title: 'Reservas Confirmadas',
-                          value: '$confirmedReservations/5',
-                          icon: Icons.check_circle,
-                          iconColor: Color(0xFFFB923C),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Passengers List
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: Row(
+                    child: Column(
                       children: [
-                        Icon(Icons.people, size: 18, color: AppTheme.textDark),
-                        SizedBox(width: 8),
                         Text(
-                          'Lista de Passageiros (${passengers.length})',
+                          '${widget.origin} → ${widget.destination}',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textDark,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '${_formatDate(widget.selectedDate)} às ${widget.timeSlot}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    children: List.generate(
-                      passengers.length,
-                      (index) => Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index < passengers.length - 1 ? 12 : 0,
-                        ),
-                        child: _passengerCard(passengers[index]),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            SizedBox(height: 16),
-          ],
-        ),
+                // Statistics Cards
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _statCard(
+                              title: 'Assentos Preenchidos',
+                              value: '$bookedSeats/${widget.capacity}',
+                              icon: Icons.event_seat,
+                              iconColor: Color(0xFF3B82F6),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _statCard(
+                              title: 'Passageiros Pagos',
+                              value: '$paidPassengers/${activeBookings.length}',
+                              icon: Icons.attach_money,
+                              iconColor: Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _statCard(
+                              title: 'Taxa de Ocupação',
+                              value: '${occupancyRate.toStringAsFixed(0)}%',
+                              icon: Icons.trending_up,
+                              iconColor: Color(0xFF06B6D4),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _statCard(
+                              title: 'Reservas Confirmadas',
+                              value: '$paidPassengers/${activeBookings.length}',
+                              icon: Icons.check_circle,
+                              iconColor: Color(0xFFFB923C),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // Passengers List
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.people,
+                              size: 18,
+                              color: AppTheme.textDark,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Lista de Passageiros (${activeBookings.length})',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textDark,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (activeBookings.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.person_off,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Nenhum passageiro reservado',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        Column(
+                          children: List.generate(
+                            activeBookings.length,
+                            (index) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index < activeBookings.length - 1
+                                    ? 12
+                                    : 0,
+                              ),
+                              child: _passengerCard(activeBookings[index]),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 16),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -285,8 +315,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
     );
   }
 
-  Widget _passengerCard(Map<String, dynamic> passenger) {
-    bool isPaid = passenger['paid'] as bool;
+  Widget _passengerCard(BookingModel booking) {
+    bool isPaid = booking.isPaid;
 
     return Container(
       padding: EdgeInsets.all(14),
@@ -312,7 +342,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        passenger['name'],
+                        booking.passengerName,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -320,7 +350,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                         ),
                       ),
                       Text(
-                        passenger['seat'],
+                        booking.seatText,
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -337,7 +367,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  isPaid ? 'Pago' : 'Pendente',
+                  booking.statusText,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -364,8 +394,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     // Buscar ou criar chat com o passageiro
                     final chatService = ChatService();
                     final chatId = await chatService.getOrCreateChat(
-                      clientId: passenger['id'] ?? '',
-                      clientName: passenger['name'] ?? 'Passageiro',
+                      clientId: booking.passengerId,
+                      clientName: booking.passengerName,
                       driverId: '', // TODO: passar o ID do motorista logado
                       driverName:
                           'Motorista', // TODO: passar o nome do motorista logado
@@ -375,8 +405,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
                           chatId: chatId,
-                          otherUserName: passenger['name'] ?? 'Passageiro',
-                          otherUserId: passenger['id'] ?? '',
+                          otherUserName: booking.passengerName,
+                          otherUserId: booking.passengerId,
                           senderType: 'driver',
                         ),
                       ),
@@ -410,7 +440,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
                   onPressed: () {
-                    _showPassengerProfile(passenger);
+                    _showPassengerProfile(booking);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -435,7 +465,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
     );
   }
 
-  void _showPassengerProfile(Map<String, dynamic> passenger) {
+  void _showPassengerProfile(BookingModel booking) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -474,7 +504,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        passenger['name'],
+                        booking.passengerName,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -482,7 +512,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                         ),
                       ),
                       Text(
-                        passenger['seat'],
+                        booking.seatText,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -495,19 +525,25 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
               SizedBox(height: 20),
               _profileInfoRow(
                 label: 'Telefone',
-                value: passenger['phone'],
+                value: booking.passengerPhone.isNotEmpty
+                    ? booking.passengerPhone
+                    : 'Não informado',
                 icon: Icons.phone,
               ),
               SizedBox(height: 12),
               _profileInfoRow(
                 label: 'Email',
-                value: passenger['email'],
+                value: booking.passengerEmail.isNotEmpty
+                    ? booking.passengerEmail
+                    : 'Não informado',
                 icon: Icons.email,
               ),
               SizedBox(height: 12),
               _profileInfoRow(
                 label: 'Local de Embarque',
-                value: passenger['address'],
+                value: booking.boardingAddress.isNotEmpty
+                    ? booking.boardingAddress
+                    : 'Não informado',
                 icon: Icons.location_on,
               ),
               SizedBox(height: 20),
@@ -527,8 +563,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     // Buscar ou criar chat com o passageiro
                     final chatService = ChatService();
                     final chatId = await chatService.getOrCreateChat(
-                      clientId: passenger['id'] ?? '',
-                      clientName: passenger['name'] ?? 'Passageiro',
+                      clientId: booking.passengerId,
+                      clientName: booking.passengerName,
                       driverId: '', // TODO: passar o ID do motorista logado
                       driverName:
                           'Motorista', // TODO: passar o nome do motorista logado
@@ -538,8 +574,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
                           chatId: chatId,
-                          otherUserName: passenger['name'] ?? 'Passageiro',
-                          otherUserId: passenger['id'] ?? '',
+                          otherUserName: booking.passengerName,
+                          otherUserId: booking.passengerId,
                           senderType: 'driver',
                         ),
                       ),

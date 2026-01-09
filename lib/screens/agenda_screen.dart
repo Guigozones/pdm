@@ -149,24 +149,21 @@ class _AgendaScreenState extends State<AgendaScreen> {
                         itemBuilder: (context, index) {
                           final route = filteredRoutes[index];
 
-                          // Define status
+                          // Define status baseado nos lugares disponíveis
                           String status;
                           Color statusColor;
                           if (route.availableSeats == 0) {
                             status = 'Lotada';
-                            statusColor = Color(0xFF10B981);
-                          } else if (route.availableSeats <
-                              route.capacity ~/ 2) {
-                            status = 'Quase Lotada';
-                            statusColor = Color(0xFFFB923C);
+                            statusColor = Color(0xFFEF4444); // Vermelho
                           } else {
-                            status = 'Disponível';
-                            statusColor = Color(0xFF3B82F6);
+                            status = '${route.availableSeats} vagas';
+                            statusColor = Color(0xFF10B981); // Verde
                           }
 
                           return Padding(
                             padding: EdgeInsets.only(bottom: 14),
                             child: _AgendaCard(
+                              routeId: route.id ?? '',
                               origin: route.origin,
                               destination: route.destination,
                               status: status,
@@ -283,6 +280,7 @@ class _DatePickerWidget extends StatelessWidget {
 
 /// Card de agenda
 class _AgendaCard extends StatelessWidget {
+  final String routeId;
   final String origin;
   final String destination;
   final String status;
@@ -295,6 +293,7 @@ class _AgendaCard extends StatelessWidget {
   final DateTime selectedDate;
 
   const _AgendaCard({
+    required this.routeId,
     required this.origin,
     required this.destination,
     required this.status,
@@ -453,12 +452,15 @@ class _AgendaCard extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => AgendaDetailScreen(
+                      routeId: routeId,
                       origin: origin,
                       destination: destination,
                       value: value,
                       capacity: capacity,
                       available: available,
                       time: time,
+                      timeSlot: timeSlot,
+                      selectedDate: selectedDate,
                     ),
                   ),
                 );
