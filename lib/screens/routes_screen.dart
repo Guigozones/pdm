@@ -333,8 +333,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                       horizontal: 12,
                                       vertical: 10,
                                     ),
-                                    hintText: vehicles.isEmpty 
-                                        ? 'Nenhum veículo' 
+                                    hintText: vehicles.isEmpty
+                                        ? 'Nenhum veículo'
                                         : 'Selecione',
                                   ),
                                   items: vehicles.map((vehicle) {
@@ -351,8 +351,11 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     setModalState(() {
                                       selectedVehicle = vehicle;
                                       if (vehicle != null) {
-                                        capacityController.text = vehicle.seats.toString();
-                                        availableSeatsController.text = vehicle.seats.toString();
+                                        capacityController.text = vehicle.seats
+                                            .toString();
+                                        availableSeatsController.text = vehicle
+                                            .seats
+                                            .toString();
                                       }
                                     });
                                   },
@@ -589,7 +592,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                         final route = RouteModel(
                                           ownerId: _user!.uid,
                                           vehicleId: selectedVehicle!.id,
-                                          vehicleName: selectedVehicle!.fullName,
+                                          vehicleName:
+                                              selectedVehicle!.fullName,
                                           origin: originController.text.trim(),
                                           destination: destinationController
                                               .text
@@ -600,7 +604,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                               ) ??
                                               0,
                                           capacity: selectedVehicle!.seats,
-                                          availableSeats: selectedVehicle!.seats,
+                                          availableSeats:
+                                              selectedVehicle!.seats,
                                           duration: durationController.text
                                               .trim(),
                                           timeSlots: timeSlots,
@@ -849,8 +854,11 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     setModalState(() {
                                       selectedVehicle = vehicle;
                                       if (vehicle != null) {
-                                        capacityController.text = vehicle.seats.toString();
-                                        availableSeatsController.text = vehicle.seats.toString();
+                                        capacityController.text = vehicle.seats
+                                            .toString();
+                                        availableSeatsController.text = vehicle
+                                            .seats
+                                            .toString();
                                       }
                                     });
                                   },
@@ -1071,10 +1079,18 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                             .toList();
 
                                         // Usa o veículo selecionado ou mantém o atual
-                                        final vehicleId = selectedVehicle?.id ?? route.vehicleId;
-                                        final vehicleName = selectedVehicle?.fullName ?? route.vehicleName;
-                                        final capacity = selectedVehicle?.seats ?? 
-                                            int.tryParse(capacityController.text) ?? route.capacity;
+                                        final vehicleId =
+                                            selectedVehicle?.id ??
+                                            route.vehicleId;
+                                        final vehicleName =
+                                            selectedVehicle?.fullName ??
+                                            route.vehicleName;
+                                        final capacity =
+                                            selectedVehicle?.seats ??
+                                            int.tryParse(
+                                              capacityController.text,
+                                            ) ??
+                                            route.capacity;
 
                                         final updatedRoute = RouteModel(
                                           id: route.id,

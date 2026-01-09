@@ -25,7 +25,9 @@ class RouteService {
 
   // Adicionar nova rota
   Future<String> addRoute(RouteModel route) async {
-    final docRef = await _firestore.collection(_collection).add(route.toFirestore());
+    final docRef = await _firestore
+        .collection(_collection)
+        .add(route.toFirestore());
     return docRef.id;
   }
 
