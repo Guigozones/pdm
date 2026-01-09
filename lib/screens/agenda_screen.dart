@@ -97,15 +97,17 @@ class _AgendaScreenState extends State<AgendaScreen> {
                         return Center(child: Text('Erro ao carregar viagens'));
                       }
 
-                      final allRoutes = snapshot.data?.docs
+                      final allRoutes =
+                          snapshot.data?.docs
                               .map((doc) => RouteModel.fromFirestore(doc))
                               .toList() ??
                           [];
 
                       // Filtra rotas pelo dia da semana selecionado
                       final filteredRoutes = allRoutes
-                          .where((route) =>
-                              route.weekDays.contains(selectedWeekDay))
+                          .where(
+                            (route) => route.weekDays.contains(selectedWeekDay),
+                          )
                           .toList();
 
                       if (filteredRoutes.isEmpty) {
@@ -216,7 +218,13 @@ class _DatePickerWidget extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200, width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: GestureDetector(
         onTap: onDateTap,
@@ -224,18 +232,45 @@ class _DatePickerWidget extends StatelessWidget {
           children: [
             Icon(Icons.calendar_today, color: Colors.grey.shade600, size: 18),
             SizedBox(width: 12),
-            Text('Selecionar Data', style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+            Text(
+              'Selecionar Data',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             Spacer(),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: AppTheme.accent, borderRadius: BorderRadius.circular(6)),
-              child: Text(weekDay, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+              decoration: BoxDecoration(
+                color: AppTheme.accent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                weekDay,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ),
             SizedBox(width: 8),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(color: AppTheme.primaryStart, borderRadius: BorderRadius.circular(6)),
-              child: Text(_formatDate(selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryStart,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                _formatDate(selectedDate),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ),
             SizedBox(width: 8),
             Icon(Icons.calendar_today, color: AppTheme.primaryStart, size: 18),
@@ -284,7 +319,13 @@ class _AgendaCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200, width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,16 +340,39 @@ class _AgendaCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$origin → $destination', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+                    Text(
+                      '$origin → $destination',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
                     SizedBox(height: 4),
-                    Text('${_formatDate(selectedDate)} às $timeSlot', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    Text(
+                      '${_formatDate(selectedDate)} às $timeSlot',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                   ],
                 ),
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
               ),
             ],
           ),
@@ -321,23 +385,52 @@ class _AgendaCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.attach_money, size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.attach_money,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   SizedBox(width: 4),
-                  Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 children: [
                   Icon(Icons.event_seat, size: 16, color: Colors.grey.shade600),
                   SizedBox(width: 4),
-                  Text('$available/$capacity lugares', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                  Text(
+                    '$available/$capacity lugares',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 children: [
-                  Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   SizedBox(width: 4),
-                  Text(time, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                  Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -351,7 +444,9 @@ class _AgendaCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryStart,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: () {
                 Navigator.push(
@@ -368,7 +463,10 @@ class _AgendaCard extends StatelessWidget {
                   ),
                 );
               },
-              child: Text('Ver mais', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Ver mais',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

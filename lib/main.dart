@@ -7,7 +7,7 @@ import 'navigation/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Inicializa Firebase com tratamento de erro
   try {
     await Firebase.initializeApp(
@@ -16,7 +16,7 @@ void main() async {
   } catch (e) {
     // Firebase já inicializado, continua normalmente
   }
-  
+
   runApp(const VansApp());
 }
 
@@ -35,10 +35,7 @@ class VansApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('pt', 'BR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('pt', 'BR'), Locale('en', 'US')],
       locale: const Locale('pt', 'BR'),
       initialRoute: AppRoutes.login,
       routes: AppRoutes.routeMap,

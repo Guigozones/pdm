@@ -105,10 +105,10 @@ class _OverviewTabState extends State<_OverviewTab> {
           StreamBuilder<QuerySnapshot>(
             stream: currentUser != null
                 ? FirebaseFirestore.instance
-                    .collection('routes')
-                    .where('ownerId', isEqualTo: currentUser.uid)
-                    .where('status', isEqualTo: 'Ativa')
-                    .snapshots()
+                      .collection('routes')
+                      .where('ownerId', isEqualTo: currentUser.uid)
+                      .where('status', isEqualTo: 'Ativa')
+                      .snapshots()
                 : null,
             builder: (context, snapshot) {
               int viagensHoje = 0;
@@ -169,10 +169,7 @@ class _OverviewTabState extends State<_OverviewTab> {
                   SizedBox(width: 8),
                   Text(
                     'Ver Relatórios Completos',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -233,15 +230,15 @@ class _OverviewTabState extends State<_OverviewTab> {
                   ],
                 ),
                 SizedBox(height: 12),
-                
+
                 // Stream de rotas do motorista para o dia de hoje
                 StreamBuilder<QuerySnapshot>(
                   stream: currentUser != null
                       ? FirebaseFirestore.instance
-                          .collection('routes')
-                          .where('ownerId', isEqualTo: currentUser.uid)
-                          .where('status', isEqualTo: 'Ativa')
-                          .snapshots()
+                            .collection('routes')
+                            .where('ownerId', isEqualTo: currentUser.uid)
+                            .where('status', isEqualTo: 'Ativa')
+                            .snapshots()
                       : null,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -260,7 +257,8 @@ class _OverviewTabState extends State<_OverviewTab> {
                       );
                     }
 
-                    final allRoutes = snapshot.data?.docs
+                    final allRoutes =
+                        snapshot.data?.docs
                             .map((doc) => RouteModel.fromFirestore(doc))
                             .toList() ??
                         [];
@@ -307,7 +305,7 @@ class _OverviewTabState extends State<_OverviewTab> {
                       children: todaysRoutes.asMap().entries.map((entry) {
                         final index = entry.key;
                         final route = entry.value;
-                        
+
                         // Define status baseado nos assentos disponíveis
                         String status;
                         Color statusColor;
