@@ -48,7 +48,7 @@ class BookingModel {
 
   factory BookingModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    
+
     // Tenta obter a data da viagem - pode ser String ou Timestamp
     DateTime travelDate = DateTime.now();
     if (data['date'] != null) {
@@ -78,35 +78,39 @@ class BookingModel {
         travelDate = (data['bookingDate'] as Timestamp).toDate();
       }
     }
-    
+
     // Tenta obter o nome do passageiro/cliente
-    String passengerName = data['clientName'] ?? 
-                          data['passengerName'] ?? 
-                          data['userName'] ?? 
-                          data['name'] ?? 
-                          'Passageiro';
-    
+    String passengerName =
+        data['clientName'] ??
+        data['passengerName'] ??
+        data['userName'] ??
+        data['name'] ??
+        'Passageiro';
+
     // Tenta obter o ID do passageiro/cliente
-    String passengerId = data['clientId'] ?? 
-                        data['passengerId'] ?? 
-                        data['userId'] ?? 
-                        data['uid'] ?? 
-                        '';
-    
+    String passengerId =
+        data['clientId'] ??
+        data['passengerId'] ??
+        data['userId'] ??
+        data['uid'] ??
+        '';
+
     // Tenta obter o email
-    String passengerEmail = data['clientEmail'] ?? 
-                           data['passengerEmail'] ?? 
-                           data['userEmail'] ?? 
-                           data['email'] ?? 
-                           '';
-    
+    String passengerEmail =
+        data['clientEmail'] ??
+        data['passengerEmail'] ??
+        data['userEmail'] ??
+        data['email'] ??
+        '';
+
     // Tenta obter o telefone
-    String passengerPhone = data['clientPhone'] ?? 
-                           data['passengerPhone'] ?? 
-                           data['userPhone'] ?? 
-                           data['phone'] ?? 
-                           '';
-    
+    String passengerPhone =
+        data['clientPhone'] ??
+        data['passengerPhone'] ??
+        data['userPhone'] ??
+        data['phone'] ??
+        '';
+
     // Tenta obter o status
     String status = data['status'] ?? data['paymentStatus'] ?? 'pendente';
     // Normaliza o status
@@ -114,10 +118,12 @@ class BookingModel {
       status = 'pago';
     } else if (status == 'pending' || status == 'Pendente') {
       status = 'pendente';
-    } else if (status == 'cancelled' || status == 'canceled' || status == 'Cancelado') {
+    } else if (status == 'cancelled' ||
+        status == 'canceled' ||
+        status == 'Cancelado') {
       status = 'cancelado';
     }
-    
+
     // SeatNumber pode ser String ou int
     int seatNum = 1;
     if (data['seatNumber'] != null) {
@@ -125,11 +131,14 @@ class BookingModel {
         seatNum = data['seatNumber'];
       } else if (data['seatNumber'] is String) {
         // Remove letras e pega só o número (ex: "8A" -> 8)
-        final numStr = (data['seatNumber'] as String).replaceAll(RegExp(r'[^0-9]'), '');
+        final numStr = (data['seatNumber'] as String).replaceAll(
+          RegExp(r'[^0-9]'),
+          '',
+        );
         seatNum = int.tryParse(numStr) ?? 1;
       }
     }
-    
+
     return BookingModel(
       id: doc.id,
       routeId: data['routeId'] ?? '',
@@ -137,7 +146,12 @@ class BookingModel {
       passengerName: passengerName,
       passengerEmail: passengerEmail,
       passengerPhone: passengerPhone,
-      boardingAddress: data['boardingAddress'] ?? data['embarqueLocal'] ?? data['pickupLocation'] ?? data['origin'] ?? '',
+      boardingAddress:
+          data['boardingAddress'] ??
+          data['embarqueLocal'] ??
+          data['pickupLocation'] ??
+          data['origin'] ??
+          '',
       seatNumber: seatNum,
       price: (data['price'] ?? data['valor'] ?? data['amount'] ?? 0).toDouble(),
       status: status,

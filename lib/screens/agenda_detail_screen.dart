@@ -69,7 +69,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
           if (snapshot.hasError) {
             print('❌ Erro: ${snapshot.error}');
           }
-          
+
           final bookings = snapshot.data ?? [];
           final activeBookings = bookings
               .where((b) => b.status != 'cancelado')

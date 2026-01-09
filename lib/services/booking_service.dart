@@ -28,21 +28,22 @@ class BookingService {
         .snapshots()
         .asyncMap((snapshot) async {
           print('📦 Encontrados ${snapshot.docs.length} tickets');
-          
+
           List<BookingModel> bookings = [];
           for (var doc in snapshot.docs) {
             print('📄 Ticket: ${doc.data()}');
             var booking = BookingModel.fromFirestore(doc);
-            
+
             // Se o nome do passageiro não foi encontrado, busca pelo clientId
-            if (booking.passengerName == 'Passageiro' && booking.passengerId.isNotEmpty) {
+            if (booking.passengerName == 'Passageiro' &&
+                booking.passengerId.isNotEmpty) {
               final userName = await _getUserName(booking.passengerId);
               booking = booking.copyWith(passengerName: userName);
             }
-            
+
             bookings.add(booking);
           }
-          
+
           return bookings;
         });
   }
