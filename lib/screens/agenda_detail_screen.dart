@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import '../services/chat_service.dart';
 import '../services/booking_service.dart';
@@ -35,6 +36,7 @@ class AgendaDetailScreen extends StatefulWidget {
 
 class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
   final BookingService _bookingService = BookingService();
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
@@ -396,9 +398,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     final chatId = await chatService.getOrCreateChat(
                       clientId: booking.passengerId,
                       clientName: booking.passengerName,
-                      driverId: '', // TODO: passar o ID do motorista logado
-                      driverName:
-                          'Motorista', // TODO: passar o nome do motorista logado
+                      driverId: _currentUser?.uid ?? '',
+                      driverName: _currentUser?.displayName ?? 'Motorista',
                     );
                     Navigator.push(
                       context,
@@ -565,9 +566,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     final chatId = await chatService.getOrCreateChat(
                       clientId: booking.passengerId,
                       clientName: booking.passengerName,
-                      driverId: '', // TODO: passar o ID do motorista logado
-                      driverName:
-                          'Motorista', // TODO: passar o nome do motorista logado
+                      driverId: _currentUser?.uid ?? '',
+                      driverName: _currentUser?.displayName ?? 'Motorista',
                     );
                     Navigator.push(
                       context,
