@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
+import '../models/route_model.dart';
 import 'agenda_detail_screen.dart';
 
 class AgendaScreen extends StatefulWidget {
@@ -10,20 +13,41 @@ class AgendaScreen extends StatefulWidget {
 }
 
 class _AgendaScreenState extends State<AgendaScreen> {
+  final AuthService _authService = AuthService();
   late DateTime selectedDate;
 
   @override
   void initState() {
     super.initState();
-    selectedDate = DateTime(2025, 10, 24);
+    selectedDate = DateTime.now(); // Inicia com a data de hoje
+  }
+
+  /// Retorna a abreviação do dia da semana para uma data
+  String _getWeekDay(DateTime date) {
+    final weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    return weekDays[date.weekday % 7];
   }
 
   void _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime(2025, 1, 1),
-      lastDate: DateTime(2025, 12, 31),
+      firstDate: DateTime(2024, 1, 1),
+      lastDate: DateTime(2030, 12, 31),
+      locale: const Locale('pt', 'BR'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.primaryStart,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppTheme.textDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedDate != null && pickedDate != selectedDate) {
       setState(() => selectedDate = pickedDate);
@@ -32,6 +56,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = _authService.currentUser;
+    final selectedWeekDay = _getWeekDay(selectedDate);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Agenda'),
@@ -42,50 +69,124 @@ class _AgendaScreenState extends State<AgendaScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DatePickerWidget(selectedDate: selectedDate, onDateTap: _selectDate),
-            SizedBox(height: 16),
-            _AgendaCard(
-              origin: 'Caxias',
-              destination: 'Teresina',
-              status: 'Lotada',
-              statusColor: Color(0xFF10B981),
-              value: 'R\$ 60,00',
-              capacity: 5,
-              available: 5,
-              time: '1h 10min',
-              context: context,
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: _DatePickerWidget(
+              selectedDate: selectedDate,
+              weekDay: selectedWeekDay,
+              onDateTap: _selectDate,
             ),
-            SizedBox(height: 14),
-            _AgendaCard(
-              origin: 'Caxias',
-              destination: 'Aldeias Altas',
-              status: 'Disponível',
-              statusColor: Color(0xFF3B82F6),
-              value: 'R\$ 80,00',
-              capacity: 10,
-              available: 7,
-              time: '1h 10min',
-              context: context,
-            ),
-            SizedBox(height: 14),
-            _AgendaCard(
-              origin: 'Caxias',
-              destination: 'São J. do Sóter',
-              status: 'Cancelada',
-              statusColor: Color(0xFFFB923C),
-              value: 'R\$ 100,00',
-              capacity: 8,
-              available: 3,
-              time: '1h 40min',
-              context: context,
-            ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: currentUser == null
+                ? Center(child: Text('Usuário não logado'))
+                : StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('routes')
+                        .where('ownerId', isEqualTo: currentUser.uid)
+                        .where('status', isEqualTo: 'Ativa')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Erro ao carregar viagens'));
+                      }
+
+                      final allRoutes = snapshot.data?.docs
+                              .map((doc) => RouteModel.fromFirestore(doc))
+                              .toList() ??
+                          [];
+
+                      // Filtra rotas pelo dia da semana selecionado
+                      final filteredRoutes = allRoutes
+                          .where((route) =>
+                              route.weekDays.contains(selectedWeekDay))
+                          .toList();
+
+                      if (filteredRoutes.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.event_busy,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Nenhuma viagem para $selectedWeekDay',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Não há rotas cadastradas para este dia da semana',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        itemCount: filteredRoutes.length,
+                        itemBuilder: (context, index) {
+                          final route = filteredRoutes[index];
+
+                          // Define status
+                          String status;
+                          Color statusColor;
+                          if (route.availableSeats == 0) {
+                            status = 'Lotada';
+                            statusColor = Color(0xFF10B981);
+                          } else if (route.availableSeats <
+                              route.capacity ~/ 2) {
+                            status = 'Quase Lotada';
+                            statusColor = Color(0xFFFB923C);
+                          } else {
+                            status = 'Disponível';
+                            statusColor = Color(0xFF3B82F6);
+                          }
+
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 14),
+                            child: _AgendaCard(
+                              origin: route.origin,
+                              destination: route.destination,
+                              status: status,
+                              statusColor: statusColor,
+                              value: route.formattedPrice,
+                              capacity: route.capacity,
+                              available: route.availableSeats,
+                              time: route.duration.isNotEmpty
+                                  ? route.duration
+                                  : '-',
+                              timeSlot: route.timeSlots.isNotEmpty
+                                  ? route.timeSlots.first
+                                  : '8:00',
+                              selectedDate: selectedDate,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -94,10 +195,12 @@ class _AgendaScreenState extends State<AgendaScreen> {
 /// Widget de seleção de data
 class _DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
+  final String weekDay;
   final VoidCallback onDateTap;
 
   const _DatePickerWidget({
     required this.selectedDate,
+    required this.weekDay,
     required this.onDateTap,
   });
 
@@ -124,6 +227,12 @@ class _DatePickerWidget extends StatelessWidget {
             Text('Selecionar Data', style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
             Spacer(),
             Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: AppTheme.accent, borderRadius: BorderRadius.circular(6)),
+              child: Text(weekDay, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+            SizedBox(width: 8),
+            Container(
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(color: AppTheme.primaryStart, borderRadius: BorderRadius.circular(6)),
               child: Text(_formatDate(selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
@@ -147,7 +256,8 @@ class _AgendaCard extends StatelessWidget {
   final int capacity;
   final int available;
   final String time;
-  final BuildContext context;
+  final String timeSlot;
+  final DateTime selectedDate;
 
   const _AgendaCard({
     required this.origin,
@@ -158,8 +268,13 @@ class _AgendaCard extends StatelessWidget {
     required this.capacity,
     required this.available,
     required this.time,
-    required this.context,
+    required this.timeSlot,
+    required this.selectedDate,
   });
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,157 +289,89 @@ class _AgendaCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardHeader(origin: origin, destination: destination, status: status, statusColor: statusColor),
+          // Header
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.location_on, size: 20, color: AppTheme.primaryStart),
+              SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$origin → $destination', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+                    SizedBox(height: 4),
+                    Text('${_formatDate(selectedDate)} às $timeSlot', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+              ),
+            ],
+          ),
           SizedBox(height: 12),
           Divider(color: Colors.grey.shade200, height: 1),
           SizedBox(height: 12),
-          _CardDetails(value: value, capacity: capacity, available: available, time: time),
-          SizedBox(height: 12),
-          _ViewMoreButton(
-            origin: origin,
-            destination: destination,
-            value: value,
-            capacity: capacity,
-            available: available,
-            time: time,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Cabeçalho do card
-class _CardHeader extends StatelessWidget {
-  final String origin;
-  final String destination;
-  final String status;
-  final Color statusColor;
-
-  const _CardHeader({
-    required this.origin,
-    required this.destination,
-    required this.status,
-    required this.statusColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.location_on, size: 20, color: AppTheme.primaryStart),
-        SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Details
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$origin → $destination', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
-              SizedBox(height: 4),
-              Text('04/10/2025 às 8:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+              Row(
+                children: [
+                  Icon(Icons.attach_money, size: 16, color: Colors.grey.shade600),
+                  SizedBox(width: 4),
+                  Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(Icons.event_seat, size: 16, color: Colors.grey.shade600),
+                  SizedBox(width: 4),
+                  Text('$available/$capacity lugares', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                  SizedBox(width: 4),
+                  Text(time, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
+                ],
+              ),
             ],
           ),
-        ),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-          child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
-        ),
-      ],
-    );
-  }
-}
-
-/// Detalhes do card
-class _CardDetails extends StatelessWidget {
-  final String value;
-  final int capacity;
-  final int available;
-  final String time;
-
-  const _CardDetails({
-    required this.value,
-    required this.capacity,
-    required this.available,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.attach_money, size: 16, color: Colors.grey.shade600),
-            SizedBox(width: 4),
-            Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(Icons.event_seat, size: 16, color: Colors.grey.shade600),
-            SizedBox(width: 4),
-            Text('$available/$capacity lugares', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
-            SizedBox(width: 4),
-            Text(time, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// Botão Ver mais
-class _ViewMoreButton extends StatelessWidget {
-  final String origin;
-  final String destination;
-  final String value;
-  final int capacity;
-  final int available;
-  final String time;
-
-  const _ViewMoreButton({
-    required this.origin,
-    required this.destination,
-    required this.value,
-    required this.capacity,
-    required this.available,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 40,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryStart,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AgendaDetailScreen(
-                origin: origin,
-                destination: destination,
-                value: value,
-                capacity: capacity,
-                available: available,
-                time: time,
+          SizedBox(height: 12),
+          // Button
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryStart,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AgendaDetailScreen(
+                      origin: origin,
+                      destination: destination,
+                      value: value,
+                      capacity: capacity,
+                      available: available,
+                      time: time,
+                    ),
+                  ),
+                );
+              },
+              child: Text('Ver mais', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
-          );
-        },
-        child: Text('Ver mais', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+        ],
       ),
     );
   }
