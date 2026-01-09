@@ -52,7 +52,9 @@ class VehicleManagementCard extends StatelessWidget {
                 ),
                 padding: EdgeInsets.all(8),
                 child: Icon(
-                  type == 'Lotação' ? Icons.directions_car : Icons.airport_shuttle,
+                  type == 'Lotação'
+                      ? Icons.directions_car
+                      : Icons.airport_shuttle,
                   color: AppTheme.primaryStart,
                   size: 24,
                 ),
@@ -74,10 +76,13 @@ class VehicleManagementCard extends StatelessWidget {
                         ),
                         SizedBox(width: 8),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: type == 'Lotação' 
-                                ? Color(0xFFFEF3C7) 
+                            color: type == 'Lotação'
+                                ? Color(0xFFFEF3C7)
                                 : Color(0xFFDCFCE7),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -86,8 +91,8 @@ class VehicleManagementCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: type == 'Lotação' 
-                                  ? Color(0xFFD97706) 
+                              color: type == 'Lotação'
+                                  ? Color(0xFFD97706)
                                   : Color(0xFF059669),
                             ),
                           ),
@@ -131,7 +136,11 @@ class VehicleManagementCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.event_seat, size: 16, color: Colors.grey.shade600),
+                    Icon(
+                      Icons.event_seat,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       '$seats lugares',
@@ -146,7 +155,11 @@ class VehicleManagementCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       year,
@@ -209,10 +222,7 @@ class VehicleManagementCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Próxima revisão: $lastReview',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
               ),
               IconButton(

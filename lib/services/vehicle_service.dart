@@ -3,7 +3,7 @@ import '../models/vehicle_model.dart';
 
 class VehicleService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   /// Referência à coleção de veículos
   CollectionReference get _vehiclesRef => _firestore.collection('vehicles');
 
@@ -30,9 +30,11 @@ class VehicleService {
         .where('ownerId', isEqualTo: ownerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => VehicleModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => VehicleModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   /// Adiciona um novo veículo
@@ -49,7 +51,7 @@ class VehicleService {
     List<String> amenities = const [],
   }) async {
     final docRef = _vehiclesRef.doc();
-    
+
     final vehicle = VehicleModel(
       id: docRef.id,
       ownerId: ownerId,

@@ -60,7 +60,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
           return Center(child: Text('Erro ao carregar veículos'));
         }
 
-        final vehicles = snapshot.data?.docs
+        final vehicles =
+            snapshot.data?.docs
                 .map((doc) => VehicleModel.fromFirestore(doc))
                 .toList() ??
             [];
@@ -139,23 +140,25 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                   ),
                 )
               else
-                ...vehicles.map((vehicle) => Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: VehicleManagementCard(
-                        brand: vehicle.fullName,
-                        plate: vehicle.plate,
-                        type: vehicle.type,
-                        seats: vehicle.seats.toString(),
-                        year: vehicle.year.toString(),
-                        mileage: vehicle.mileage.toStringAsFixed(0),
-                        status: vehicle.status,
-                        statusColor: _getStatusColor(vehicle.status),
-                        lastReview: _formatDate(vehicle.lastReview),
-                        amenities: vehicle.amenities,
-                        onEdit: () => _showEditVehicleModal(context, vehicle),
-                        onDelete: () => _showDeleteConfirmation(context, vehicle),
-                      ),
-                    )),
+                ...vehicles.map(
+                  (vehicle) => Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: VehicleManagementCard(
+                      brand: vehicle.fullName,
+                      plate: vehicle.plate,
+                      type: vehicle.type,
+                      seats: vehicle.seats.toString(),
+                      year: vehicle.year.toString(),
+                      mileage: vehicle.mileage.toStringAsFixed(0),
+                      status: vehicle.status,
+                      statusColor: _getStatusColor(vehicle.status),
+                      lastReview: _formatDate(vehicle.lastReview),
+                      amenities: vehicle.amenities,
+                      onEdit: () => _showEditVehicleModal(context, vehicle),
+                      onDelete: () => _showDeleteConfirmation(context, vehicle),
+                    ),
+                  ),
+                ),
 
               SizedBox(height: 24),
             ],
@@ -385,13 +388,17 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 10),
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                   ),
                                   items: ['Ativo', 'Inativo', 'Manutenção']
-                                      .map((status) => DropdownMenuItem(
-                                            value: status,
-                                            child: Text(status),
-                                          ))
+                                      .map(
+                                        (status) => DropdownMenuItem(
+                                          value: status,
+                                          child: Text(status),
+                                        ),
+                                      )
                                       .toList(),
                                   onChanged: (value) {
                                     setDialogState(() {
@@ -426,11 +433,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                       if (brandController.text.isEmpty ||
                                           modelController.text.isEmpty ||
                                           plateController.text.isEmpty) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                'Preencha os campos obrigatórios'),
+                                              'Preencha os campos obrigatórios',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -449,35 +458,44 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                             brand: brandController.text.trim(),
                                             model: modelController.text.trim(),
                                             plate: plateController.text.trim(),
-                                            seats: int.tryParse(
-                                                    capacityController.text) ??
+                                            seats:
+                                                int.tryParse(
+                                                  capacityController.text,
+                                                ) ??
                                                 0,
-                                            year: int.tryParse(
-                                                    yearController.text) ??
+                                            year:
+                                                int.tryParse(
+                                                  yearController.text,
+                                                ) ??
                                                 DateTime.now().year,
                                             status: selectedStatus,
                                           );
 
                                           if (mounted) {
                                             Navigator.pop(context);
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                    'Veículo cadastrado com sucesso!'),
-                                                backgroundColor:
-                                                    Color(0xFF10B981),
+                                                  'Veículo cadastrado com sucesso!',
+                                                ),
+                                                backgroundColor: Color(
+                                                  0xFF10B981,
+                                                ),
                                               ),
                                             );
                                           }
                                         }
                                       } catch (e) {
                                         setDialogState(() => isLoading = false);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                            content:
-                                                Text('Erro ao cadastrar: $e'),
+                                            content: Text(
+                                              'Erro ao cadastrar: $e',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -491,7 +509,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : Text(
@@ -514,9 +533,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                               onPressed: () => Navigator.pop(context),
                               child: Text(
                                 'Cancelar',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -537,12 +554,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
   void _showEditVehicleModal(BuildContext context, VehicleModel vehicle) {
     final brandController = TextEditingController(text: vehicle.brand);
     final modelController = TextEditingController(text: vehicle.model);
-    final capacityController =
-        TextEditingController(text: vehicle.seats.toString());
+    final capacityController = TextEditingController(
+      text: vehicle.seats.toString(),
+    );
     final plateController = TextEditingController(text: vehicle.plate);
     final yearController = TextEditingController(text: vehicle.year.toString());
-    final mileageController =
-        TextEditingController(text: vehicle.mileage.toStringAsFixed(0));
+    final mileageController = TextEditingController(
+      text: vehicle.mileage.toStringAsFixed(0),
+    );
     String selectedType = vehicle.type;
     String selectedStatus = vehicle.status;
     bool isLoading = false;
@@ -768,13 +787,17 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                             ),
                             items: ['Ativo', 'Inativo', 'Manutenção']
-                                .map((status) => DropdownMenuItem(
-                                      value: status,
-                                      child: Text(status),
-                                    ))
+                                .map(
+                                  (status) => DropdownMenuItem(
+                                    value: status,
+                                    child: Text(status),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (value) {
                               setDialogState(() {
@@ -810,40 +833,52 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                           brand: brandController.text.trim(),
                                           model: modelController.text.trim(),
                                           plate: plateController.text.trim(),
-                                          seats: int.tryParse(
-                                                  capacityController.text) ??
+                                          seats:
+                                              int.tryParse(
+                                                capacityController.text,
+                                              ) ??
                                               vehicle.seats,
-                                          year: int.tryParse(
-                                                  yearController.text) ??
+                                          year:
+                                              int.tryParse(
+                                                yearController.text,
+                                              ) ??
                                               vehicle.year,
-                                          mileage: double.tryParse(
-                                                  mileageController.text) ??
+                                          mileage:
+                                              double.tryParse(
+                                                mileageController.text,
+                                              ) ??
                                               vehicle.mileage,
                                           status: selectedStatus,
                                         );
 
-                                        await _vehicleService
-                                            .updateVehicle(updatedVehicle);
+                                        await _vehicleService.updateVehicle(
+                                          updatedVehicle,
+                                        );
 
                                         if (mounted) {
                                           Navigator.pop(context);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                  'Veículo atualizado com sucesso!'),
-                                              backgroundColor:
-                                                  Color(0xFF10B981),
+                                                'Veículo atualizado com sucesso!',
+                                              ),
+                                              backgroundColor: Color(
+                                                0xFF10B981,
+                                              ),
                                             ),
                                           );
                                         }
                                       } catch (e) {
                                         setDialogState(() => isLoading = false);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                            content:
-                                                Text('Erro ao atualizar: $e'),
+                                            content: Text(
+                                              'Erro ao atualizar: $e',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -857,7 +892,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : Text(
@@ -880,9 +916,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                               onPressed: () => Navigator.pop(context),
                               child: Text(
                                 'Cancelar',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -906,7 +940,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
       builder: (context) => AlertDialog(
         title: Text('Excluir Veículo'),
         content: Text(
-            'Tem certeza que deseja excluir o veículo ${vehicle.fullName}?'),
+          'Tem certeza que deseja excluir o veículo ${vehicle.fullName}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -963,9 +998,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
