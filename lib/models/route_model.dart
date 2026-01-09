@@ -5,6 +5,7 @@ class RouteModel {
   final String ownerId;
   final String? vehicleId; // ID do veículo atribuído à rota
   final String? vehicleName; // Nome do veículo para exibição
+  final String? vehicleType; // Tipo do veículo: 'Van' ou 'Lotação'
   final String origin;
   final String destination;
   final double price;
@@ -23,6 +24,7 @@ class RouteModel {
     required this.ownerId,
     this.vehicleId,
     this.vehicleName,
+    this.vehicleType,
     required this.origin,
     required this.destination,
     required this.price,
@@ -57,6 +59,7 @@ class RouteModel {
       ownerId: data['ownerId'] ?? '',
       vehicleId: data['vehicleId'],
       vehicleName: data['vehicleName'],
+      vehicleType: data['vehicleType'],
       origin: data['origin'] ?? '',
       destination: data['destination'] ?? '',
       price: (data['price'] ?? 0).toDouble(),
@@ -78,6 +81,7 @@ class RouteModel {
       'ownerId': ownerId,
       'vehicleId': vehicleId,
       'vehicleName': vehicleName,
+      'vehicleType': vehicleType,
       'origin': origin,
       'destination': destination,
       'price': price,
@@ -97,6 +101,7 @@ class RouteModel {
     String? ownerId,
     String? vehicleId,
     String? vehicleName,
+    String? vehicleType,
     String? origin,
     String? destination,
     double? price,
@@ -114,6 +119,7 @@ class RouteModel {
       ownerId: ownerId ?? this.ownerId,
       vehicleId: vehicleId ?? this.vehicleId,
       vehicleName: vehicleName ?? this.vehicleName,
+      vehicleType: vehicleType ?? this.vehicleType,
       origin: origin ?? this.origin,
       destination: destination ?? this.destination,
       price: price ?? this.price,

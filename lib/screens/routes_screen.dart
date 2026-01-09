@@ -594,6 +594,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                           vehicleId: selectedVehicle!.id,
                                           vehicleName:
                                               selectedVehicle!.fullName,
+                                          vehicleType: selectedVehicle!.type,
                                           origin: originController.text.trim(),
                                           destination: destinationController
                                               .text
@@ -1085,6 +1086,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                         final vehicleName =
                                             selectedVehicle?.fullName ??
                                             route.vehicleName;
+                                        final vehicleType =
+                                            selectedVehicle?.type ??
+                                            route.vehicleType;
                                         final capacity =
                                             selectedVehicle?.seats ??
                                             int.tryParse(
@@ -1097,6 +1101,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                           ownerId: route.ownerId,
                                           vehicleId: vehicleId,
                                           vehicleName: vehicleName,
+                                          vehicleType: vehicleType,
                                           origin: originController.text.trim(),
                                           destination: destinationController
                                               .text
