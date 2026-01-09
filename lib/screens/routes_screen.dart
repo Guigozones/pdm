@@ -26,6 +26,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
   final timeslotsController = TextEditingController();
   final tripsPerWeekController = TextEditingController();
   String selectedStatus = 'Ativa';
+  List<String> selectedWeekDays = [];
+
+  static const List<String> allWeekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
 
   @override
   void dispose() {
@@ -60,7 +63,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
     }
 
     return StreamBuilder<QuerySnapshot>(
-      stream: _routeService.watchRoutesByOwner(_user!.uid),
+      stream: _routeService.watchRoutesByOwner(_user.uid),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -145,10 +148,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       Text(
                         'Clique no botão acima para cadastrar sua primeira rota.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                       ),
                     ],
                   ),
@@ -165,8 +165,11 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       passengers: route.tripsText,
                       valor: route.formattedPrice,
                       availableSeats: route.seatsText,
-                      duration: route.duration.isNotEmpty ? route.duration : 'N/A',
+                      duration: route.duration.isNotEmpty
+                          ? route.duration
+                          : 'N/A',
                       timeSlots: route.timeSlots,
+                      weekDays: route.weekDays,
                       status: route.status,
                       statusColor: _getStatusColor(route.status),
                       onEdit: () => _showEditRouteModal(context, route),
@@ -193,6 +196,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
     timeslotsController.clear();
     tripsPerWeekController.clear();
     selectedStatus = 'Ativa';
+    selectedWeekDays = [];
 
     bool isLoading = false;
 
@@ -231,7 +235,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Origem e Destino em linha
+                      // Origem e Destino em linha (Nova Rota)
                       Row(
                         children: [
                           Expanded(
@@ -310,6 +314,69 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         '08:00, 14:30, 20:00',
                       ),
 
+                      const SizedBox(height: 16),
+
+                      // Dias da Semana
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dias da Semana:',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: allWeekDays.map((day) {
+                              final isSelected = selectedWeekDays.contains(day);
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      selectedWeekDays.remove(day);
+                                    } else {
+                                      selectedWeekDays.add(day);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppTheme.primaryStart
+                                          : Colors.grey[300]!,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    day,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 12),
 
                       // Viagens por semana e Status
@@ -349,10 +416,12 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     ),
                                   ),
                                   items: ['Ativa', 'Pausada', 'Inativa']
-                                      .map((status) => DropdownMenuItem(
-                                            value: status,
-                                            child: Text(status),
-                                          ))
+                                      .map(
+                                        (status) => DropdownMenuItem(
+                                          value: status,
+                                          child: Text(status),
+                                        ),
+                                      )
                                       .toList(),
                                   onChanged: (value) {
                                     setModalState(() {
@@ -376,7 +445,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryStart,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -386,9 +457,13 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                   : () async {
                                       if (originController.text.isEmpty ||
                                           destinationController.text.isEmpty) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Preencha origem e destino'),
+                                            content: Text(
+                                              'Preencha origem e destino',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -398,7 +473,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                       setModalState(() => isLoading = true);
 
                                       try {
-                                        final timeSlots = timeslotsController.text
+                                        final timeSlots = timeslotsController
+                                            .text
                                             .split(',')
                                             .map((t) => t.trim())
                                             .where((t) => t.isNotEmpty)
@@ -407,28 +483,56 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                         final route = RouteModel(
                                           ownerId: _user!.uid,
                                           origin: originController.text.trim(),
-                                          destination: destinationController.text.trim(),
-                                          price: double.tryParse(valueController.text) ?? 0,
-                                          capacity: int.tryParse(capacityController.text) ?? 0,
-                                          availableSeats: int.tryParse(availableSeatsController.text) ?? 0,
-                                          duration: durationController.text.trim(),
+                                          destination: destinationController
+                                              .text
+                                              .trim(),
+                                          price:
+                                              double.tryParse(
+                                                valueController.text,
+                                              ) ??
+                                              0,
+                                          capacity:
+                                              int.tryParse(
+                                                capacityController.text,
+                                              ) ??
+                                              0,
+                                          availableSeats:
+                                              int.tryParse(
+                                                availableSeatsController.text,
+                                              ) ??
+                                              0,
+                                          duration: durationController.text
+                                              .trim(),
                                           timeSlots: timeSlots,
-                                          tripsPerWeek: int.tryParse(tripsPerWeekController.text) ?? 0,
+                                          weekDays: selectedWeekDays,
+                                          tripsPerWeek:
+                                              int.tryParse(
+                                                tripsPerWeekController.text,
+                                              ) ??
+                                              0,
                                           status: selectedStatus,
                                         );
 
                                         await _routeService.addRoute(route);
                                         Navigator.pop(context);
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Rota cadastrada com sucesso!'),
+                                            content: Text(
+                                              'Rota cadastrada com sucesso!',
+                                            ),
                                             backgroundColor: Colors.green,
                                           ),
                                         );
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                            content: Text('Erro ao cadastrar: $e'),
+                                            content: Text(
+                                              'Erro ao cadastrar: $e',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -447,7 +551,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     )
                                   : const Text(
                                       'Salvar Rota',
-                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                             ),
                           ),
@@ -455,7 +561,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -490,6 +598,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
     timeslotsController.text = route.timeSlots.join(', ');
     tripsPerWeekController.text = route.tripsPerWeek.toString();
     selectedStatus = route.status;
+    selectedWeekDays = List<String>.from(route.weekDays);
 
     bool isLoading = false;
 
@@ -528,7 +637,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Origem e Destino em linha
+                      // Origem e Destino em linha (Editar Rota)
                       Row(
                         children: [
                           Expanded(
@@ -607,9 +716,72 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         '08:00, 14:30, 20:00',
                       ),
 
+                      const SizedBox(height: 16),
+
+                      // Dias da Semana (Editar Rota)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dias da Semana:',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: allWeekDays.map((day) {
+                              final isSelected = selectedWeekDays.contains(day);
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      selectedWeekDays.remove(day);
+                                    } else {
+                                      selectedWeekDays.add(day);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppTheme.primaryStart
+                                          : Colors.grey[300]!,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    day,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 12),
 
-                      // Viagens por semana e Status
+                      // Viagens por semana e Status (Editar Rota)
                       Row(
                         children: [
                           Expanded(
@@ -646,10 +818,12 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     ),
                                   ),
                                   items: ['Ativa', 'Pausada', 'Inativa']
-                                      .map((status) => DropdownMenuItem(
-                                            value: status,
-                                            child: Text(status),
-                                          ))
+                                      .map(
+                                        (status) => DropdownMenuItem(
+                                          value: status,
+                                          child: Text(status),
+                                        ),
+                                      )
                                       .toList(),
                                   onChanged: (value) {
                                     setModalState(() {
@@ -665,7 +839,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
                       const SizedBox(height: 20),
 
-                      // Botões de ação
+                      // Botões de ação (Editar Rota)
                       Row(
                         children: [
                           Expanded(
@@ -673,7 +847,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryStart,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -683,9 +859,13 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                   : () async {
                                       if (originController.text.isEmpty ||
                                           destinationController.text.isEmpty) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Preencha origem e destino'),
+                                            content: Text(
+                                              'Preencha origem e destino',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -695,7 +875,8 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                       setModalState(() => isLoading = true);
 
                                       try {
-                                        final timeSlots = timeslotsController.text
+                                        final timeSlots = timeslotsController
+                                            .text
                                             .split(',')
                                             .map((t) => t.trim())
                                             .where((t) => t.isNotEmpty)
@@ -705,29 +886,60 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                           id: route.id,
                                           ownerId: route.ownerId,
                                           origin: originController.text.trim(),
-                                          destination: destinationController.text.trim(),
-                                          price: double.tryParse(valueController.text) ?? 0,
-                                          capacity: int.tryParse(capacityController.text) ?? 0,
-                                          availableSeats: int.tryParse(availableSeatsController.text) ?? 0,
-                                          duration: durationController.text.trim(),
+                                          destination: destinationController
+                                              .text
+                                              .trim(),
+                                          price:
+                                              double.tryParse(
+                                                valueController.text,
+                                              ) ??
+                                              0,
+                                          capacity:
+                                              int.tryParse(
+                                                capacityController.text,
+                                              ) ??
+                                              0,
+                                          availableSeats:
+                                              int.tryParse(
+                                                availableSeatsController.text,
+                                              ) ??
+                                              0,
+                                          duration: durationController.text
+                                              .trim(),
                                           timeSlots: timeSlots,
-                                          tripsPerWeek: int.tryParse(tripsPerWeekController.text) ?? 0,
+                                          weekDays: selectedWeekDays,
+                                          tripsPerWeek:
+                                              int.tryParse(
+                                                tripsPerWeekController.text,
+                                              ) ??
+                                              0,
                                           status: selectedStatus,
                                           createdAt: route.createdAt,
                                         );
 
-                                        await _routeService.updateRoute(route.id!, updatedRoute);
+                                        await _routeService.updateRoute(
+                                          route.id!,
+                                          updatedRoute,
+                                        );
                                         Navigator.pop(context);
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Rota atualizada com sucesso!'),
+                                            content: Text(
+                                              'Rota atualizada com sucesso!',
+                                            ),
                                             backgroundColor: Colors.green,
                                           ),
                                         );
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
-                                            content: Text('Erro ao atualizar: $e'),
+                                            content: Text(
+                                              'Erro ao atualizar: $e',
+                                            ),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -746,7 +958,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                     )
                                   : const Text(
                                       'Salvar Alterações',
-                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                             ),
                           ),
@@ -754,7 +968,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -845,9 +1061,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           decoration: InputDecoration(
             hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,

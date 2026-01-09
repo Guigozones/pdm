@@ -10,6 +10,7 @@ class RouteManagementCard extends StatelessWidget {
   final String availableSeats;
   final String duration;
   final List<String> timeSlots;
+  final List<String> weekDays;
   final String status;
   final Color statusColor;
   final VoidCallback onEdit;
@@ -25,6 +26,7 @@ class RouteManagementCard extends StatelessWidget {
     required this.availableSeats,
     required this.duration,
     required this.timeSlots,
+    this.weekDays = const [],
     required this.status,
     required this.statusColor,
     required this.onEdit,
@@ -212,6 +214,44 @@ class RouteManagementCard extends StatelessWidget {
               );
             }).toList(),
           ),
+
+          if (weekDays.isNotEmpty) ...[
+            SizedBox(height: 12),
+
+            // Week days section
+            Text(
+              'Dias da Semana:',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textDark,
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            // Week day chips
+            Wrap(
+              spacing: 8,
+              children: weekDays.map((day) {
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    day,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
 
           SizedBox(height: 12),
 

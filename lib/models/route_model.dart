@@ -10,6 +10,7 @@ class RouteModel {
   final int availableSeats;
   final String duration;
   final List<String> timeSlots;
+  final List<String> weekDays; // Dias da semana: 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'
   final String status; // 'Ativa', 'Pausada', 'Inativa'
   final int tripsPerWeek;
   final DateTime? createdAt;
@@ -24,6 +25,7 @@ class RouteModel {
     this.availableSeats = 0,
     this.duration = '',
     this.timeSlots = const [],
+    this.weekDays = const [],
     this.status = 'Ativa',
     this.tripsPerWeek = 0,
     this.createdAt,
@@ -40,6 +42,8 @@ class RouteModel {
 
   String get tripsText => '$tripsPerWeek viagens/semana';
 
+  String get weekDaysText => weekDays.isNotEmpty ? weekDays.join(', ') : 'Não definido';
+
   factory RouteModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return RouteModel(
@@ -52,6 +56,7 @@ class RouteModel {
       availableSeats: data['availableSeats'] ?? 0,
       duration: data['duration'] ?? '',
       timeSlots: List<String>.from(data['timeSlots'] ?? []),
+      weekDays: List<String>.from(data['weekDays'] ?? []),
       status: data['status'] ?? 'Ativa',
       tripsPerWeek: data['tripsPerWeek'] ?? 0,
       createdAt: data['createdAt'] != null 
@@ -70,6 +75,7 @@ class RouteModel {
       'availableSeats': availableSeats,
       'duration': duration,
       'timeSlots': timeSlots,
+      'weekDays': weekDays,
       'status': status,
       'tripsPerWeek': tripsPerWeek,
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
@@ -86,6 +92,7 @@ class RouteModel {
     int? availableSeats,
     String? duration,
     List<String>? timeSlots,
+    List<String>? weekDays,
     String? status,
     int? tripsPerWeek,
     DateTime? createdAt,
@@ -100,6 +107,7 @@ class RouteModel {
       availableSeats: availableSeats ?? this.availableSeats,
       duration: duration ?? this.duration,
       timeSlots: timeSlots ?? this.timeSlots,
+      weekDays: weekDays ?? this.weekDays,
       status: status ?? this.status,
       tripsPerWeek: tripsPerWeek ?? this.tripsPerWeek,
       createdAt: createdAt ?? this.createdAt,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/chat_service.dart';
 import 'chat_screen.dart';
 
 class AgendaDetailScreen extends StatefulWidget {
@@ -359,13 +360,23 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     ),
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    // Buscar ou criar chat com o passageiro
+                    final chatService = ChatService();
+                    final chatId = await chatService.getOrCreateChat(
+                      clientId: passenger['id'] ?? '',
+                      clientName: passenger['name'] ?? 'Passageiro',
+                      driverId: '', // TODO: passar o ID do motorista logado
+                      driverName: 'Motorista', // TODO: passar o nome do motorista logado
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
-                          passengerName: passenger['name'],
-                          route: '${widget.origin} → ${widget.destination}',
+                          chatId: chatId,
+                          otherUserName: passenger['name'] ?? 'Passageiro',
+                          otherUserId: passenger['id'] ?? '',
+                          senderType: 'driver',
                         ),
                       ),
                     );
@@ -504,14 +515,24 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
+                    // Buscar ou criar chat com o passageiro
+                    final chatService = ChatService();
+                    final chatId = await chatService.getOrCreateChat(
+                      clientId: passenger['id'] ?? '',
+                      clientName: passenger['name'] ?? 'Passageiro',
+                      driverId: '', // TODO: passar o ID do motorista logado
+                      driverName: 'Motorista', // TODO: passar o nome do motorista logado
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
-                          passengerName: passenger['name'],
-                          route: '${widget.origin} → ${widget.destination}',
+                          chatId: chatId,
+                          otherUserName: passenger['name'] ?? 'Passageiro',
+                          otherUserId: passenger['id'] ?? '',
+                          senderType: 'driver',
                         ),
                       ),
                     );
