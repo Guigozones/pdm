@@ -91,22 +91,26 @@ class _OverviewTabState extends State<_OverviewTab> {
                 : null,
             builder: (context, routesSnapshot) {
               // Obtém IDs das rotas do motorista
-              final routeIds = routesSnapshot.data?.docs
-                      .map((doc) => doc.id)
-                      .toList() ?? [];
-              
-              final routes = routesSnapshot.data?.docs
+              final routeIds =
+                  routesSnapshot.data?.docs.map((doc) => doc.id).toList() ?? [];
+
+              final routes =
+                  routesSnapshot.data?.docs
                       .map((doc) => RouteModel.fromFirestore(doc))
                       .where((route) => route.status == 'Ativa')
-                      .toList() ?? [];
-              
+                      .toList() ??
+                  [];
+
               // Filtra rotas do dia
               final todaysRoutes = routes
                   .where((route) => route.weekDays.contains(todayWeekDay))
                   .toList();
-              
+
               int viagensHoje = todaysRoutes.length;
-              int capacidadeTotal = todaysRoutes.fold(0, (sum, r) => sum + r.capacity);
+              int capacidadeTotal = todaysRoutes.fold(
+                0,
+                (sum, r) => sum + r.capacity,
+              );
 
               // Stream para buscar tickets das rotas do motorista para hoje
               return StreamBuilder<QuerySnapshot>(
@@ -121,25 +125,27 @@ class _OverviewTabState extends State<_OverviewTab> {
                   double receitaHoje = 0;
                   int passageirosHoje = 0;
                   int passageirosPagos = 0;
-                  
+
                   if (ticketsSnapshot.hasData) {
                     for (var doc in ticketsSnapshot.data!.docs) {
                       final data = doc.data() as Map<String, dynamic>;
                       final status = data['status'] ?? '';
                       final price = (data['price'] ?? 0).toDouble();
-                      
+
                       passageirosHoje++;
-                      
-                      if (status == 'pago' || status == 'paid' || status == 'Pago') {
+
+                      if (status == 'pago' ||
+                          status == 'paid' ||
+                          status == 'Pago') {
                         receitaHoje += price;
                         passageirosPagos++;
                       }
                     }
                   }
-                  
+
                   // Calcula taxa de ocupação
-                  double taxaOcupacao = capacidadeTotal > 0 
-                      ? (passageirosHoje / capacidadeTotal) * 100 
+                  double taxaOcupacao = capacidadeTotal > 0
+                      ? (passageirosHoje / capacidadeTotal) * 100
                       : 0;
 
                   return Column(
@@ -151,7 +157,9 @@ class _OverviewTabState extends State<_OverviewTab> {
                             child: StatBox(
                               title: 'Receita Hoje',
                               value: 'R\$ ${receitaHoje.toStringAsFixed(2)}',
-                              diff: passageirosPagos > 0 ? '$passageirosPagos pagos' : '-',
+                              diff: passageirosPagos > 0
+                                  ? '$passageirosPagos pagos'
+                                  : '-',
                               icon: Icons.attach_money,
                               iconColor: Color(0xFF10B981),
                             ),
@@ -187,7 +195,9 @@ class _OverviewTabState extends State<_OverviewTab> {
                             child: StatBox(
                               title: 'Taxa de Ocupação',
                               value: '${taxaOcupacao.toStringAsFixed(0)}%',
-                              diff: capacidadeTotal > 0 ? '$passageirosHoje/$capacidadeTotal' : '-',
+                              diff: capacidadeTotal > 0
+                                  ? '$passageirosHoje/$capacidadeTotal'
+                                  : '-',
                               icon: Icons.trending_up,
                               iconColor: Color(0xFFF59E0B),
                             ),
