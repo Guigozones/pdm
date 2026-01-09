@@ -64,84 +64,139 @@ class _OverviewTabState extends State<_OverviewTab> {
     return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
   }
 
+  /// Retorna a data de hoje no formato usado nos tickets (dd/mm/yyyy)
+  String _getTodayDateString() {
+    final now = DateTime.now();
+    return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = _authService.currentUser;
     final todayWeekDay = _getTodayWeekDay();
+    final todayDateString = _getTodayDateString();
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Cards de estatísticas em grid 2x2
-          Row(
-            children: [
-              Expanded(
-                child: StatBox(
-                  title: 'Receita Hoje',
-                  value: 'R\$ 0,00',
-                  diff: '-',
-                  icon: Icons.attach_money,
-                  iconColor: Color(0xFF10B981),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: StatBox(
-                  title: 'Passageiros',
-                  value: '0',
-                  diff: '-',
-                  icon: Icons.people,
-                  iconColor: Color(0xFF3B82F6),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Stream para contar viagens de hoje
+          // Stream para buscar rotas do usuário
           StreamBuilder<QuerySnapshot>(
             stream: currentUser != null
                 ? FirebaseFirestore.instance
                       .collection('routes')
                       .where('ownerId', isEqualTo: currentUser.uid)
-                      .where('status', isEqualTo: 'Ativa')
                       .snapshots()
                 : null,
-            builder: (context, snapshot) {
-              int viagensHoje = 0;
-              if (snapshot.hasData) {
-                final routes = snapshot.data!.docs
-                    .map((doc) => RouteModel.fromFirestore(doc))
-                    .where((route) => route.weekDays.contains(todayWeekDay))
-                    .toList();
-                viagensHoje = routes.length;
-              }
+            builder: (context, routesSnapshot) {
+              // Obtém IDs das rotas do motorista
+              final routeIds = routesSnapshot.data?.docs
+                      .map((doc) => doc.id)
+                      .toList() ?? [];
+              
+              final routes = routesSnapshot.data?.docs
+                      .map((doc) => RouteModel.fromFirestore(doc))
+                      .where((route) => route.status == 'Ativa')
+                      .toList() ?? [];
+              
+              // Filtra rotas do dia
+              final todaysRoutes = routes
+                  .where((route) => route.weekDays.contains(todayWeekDay))
+                  .toList();
+              
+              int viagensHoje = todaysRoutes.length;
+              int capacidadeTotal = todaysRoutes.fold(0, (sum, r) => sum + r.capacity);
 
-              return Row(
-                children: [
-                  Expanded(
-                    child: StatBox(
-                      title: 'Viagens Hoje',
-                      value: viagensHoje.toString(),
-                      diff: todayWeekDay,
-                      icon: Icons.directions_car,
-                      iconColor: Color(0xFF06B6D4),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: StatBox(
-                      title: 'Taxa de Ocupação',
-                      value: '-',
-                      diff: '-',
-                      icon: Icons.trending_up,
-                      iconColor: Color(0xFFF59E0B),
-                    ),
-                  ),
-                ],
+              // Stream para buscar tickets das rotas do motorista para hoje
+              return StreamBuilder<QuerySnapshot>(
+                stream: routeIds.isNotEmpty
+                    ? FirebaseFirestore.instance
+                          .collection('tickets')
+                          .where('routeId', whereIn: routeIds.take(10).toList())
+                          .where('date', isEqualTo: todayDateString)
+                          .snapshots()
+                    : null,
+                builder: (context, ticketsSnapshot) {
+                  double receitaHoje = 0;
+                  int passageirosHoje = 0;
+                  int passageirosPagos = 0;
+                  
+                  if (ticketsSnapshot.hasData) {
+                    for (var doc in ticketsSnapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final status = data['status'] ?? '';
+                      final price = (data['price'] ?? 0).toDouble();
+                      
+                      passageirosHoje++;
+                      
+                      if (status == 'pago' || status == 'paid' || status == 'Pago') {
+                        receitaHoje += price;
+                        passageirosPagos++;
+                      }
+                    }
+                  }
+                  
+                  // Calcula taxa de ocupação
+                  double taxaOcupacao = capacidadeTotal > 0 
+                      ? (passageirosHoje / capacidadeTotal) * 100 
+                      : 0;
+
+                  return Column(
+                    children: [
+                      // Cards de estatísticas em grid 2x2
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StatBox(
+                              title: 'Receita Hoje',
+                              value: 'R\$ ${receitaHoje.toStringAsFixed(2)}',
+                              diff: passageirosPagos > 0 ? '$passageirosPagos pagos' : '-',
+                              icon: Icons.attach_money,
+                              iconColor: Color(0xFF10B981),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: StatBox(
+                              title: 'Passageiros',
+                              value: passageirosHoje.toString(),
+                              diff: passageirosHoje > 0 ? 'hoje' : '-',
+                              icon: Icons.people,
+                              iconColor: Color(0xFF3B82F6),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StatBox(
+                              title: 'Viagens Hoje',
+                              value: viagensHoje.toString(),
+                              diff: todayWeekDay,
+                              icon: Icons.directions_car,
+                              iconColor: Color(0xFF06B6D4),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: StatBox(
+                              title: 'Taxa de Ocupação',
+                              value: '${taxaOcupacao.toStringAsFixed(0)}%',
+                              diff: capacidadeTotal > 0 ? '$passageirosHoje/$capacidadeTotal' : '-',
+                              icon: Icons.trending_up,
+                              iconColor: Color(0xFFF59E0B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -311,13 +366,10 @@ class _OverviewTabState extends State<_OverviewTab> {
                         Color statusColor;
                         if (route.availableSeats == 0) {
                           status = 'Lotada';
-                          statusColor = Color(0xFF10B981);
-                        } else if (route.availableSeats < route.capacity ~/ 2) {
-                          status = 'Quase Lotada';
-                          statusColor = Color(0xFFFB923C);
+                          statusColor = Color(0xFFEF4444); // Vermelho
                         } else {
-                          status = '${route.availableSeats} lugares';
-                          statusColor = Color(0xFF3B82F6);
+                          status = '${route.availableSeats} vagas';
+                          statusColor = Color(0xFF10B981); // Verde
                         }
 
                         // Horário da viagem
