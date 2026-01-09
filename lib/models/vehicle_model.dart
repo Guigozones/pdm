@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class VehicleModel {
   final String id;
   final String ownerId; // ID do usuário dono do veículo
+  final String type; // 'Van' ou 'Lotação'
   final String brand;
   final String model;
   final String plate;
@@ -17,6 +18,7 @@ class VehicleModel {
   VehicleModel({
     required this.id,
     required this.ownerId,
+    this.type = 'Van',
     required this.brand,
     required this.model,
     required this.plate,
@@ -38,6 +40,7 @@ class VehicleModel {
     return VehicleModel(
       id: doc.id,
       ownerId: data['ownerId'] ?? '',
+      type: data['type'] ?? 'Van',
       brand: data['brand'] ?? '',
       model: data['model'] ?? '',
       plate: data['plate'] ?? '',
@@ -55,6 +58,7 @@ class VehicleModel {
   Map<String, dynamic> toFirestore() {
     return {
       'ownerId': ownerId,
+      'type': type,
       'brand': brand,
       'model': model,
       'plate': plate,
@@ -70,6 +74,7 @@ class VehicleModel {
 
   /// Cria uma cópia com campos alterados
   VehicleModel copyWith({
+    String? type,
     String? brand,
     String? model,
     String? plate,
@@ -83,6 +88,7 @@ class VehicleModel {
     return VehicleModel(
       id: id,
       ownerId: ownerId,
+      type: type ?? this.type,
       brand: brand ?? this.brand,
       model: model ?? this.model,
       plate: plate ?? this.plate,

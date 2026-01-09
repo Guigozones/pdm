@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 class VehicleManagementCard extends StatelessWidget {
   final String brand;
   final String plate;
+  final String type;
   final String seats;
   final String year;
   final String mileage;
@@ -18,6 +19,7 @@ class VehicleManagementCard extends StatelessWidget {
     Key? key,
     required this.brand,
     required this.plate,
+    this.type = 'Van',
     required this.seats,
     required this.year,
     required this.mileage,
@@ -50,7 +52,7 @@ class VehicleManagementCard extends StatelessWidget {
                 ),
                 padding: EdgeInsets.all(8),
                 child: Icon(
-                  Icons.directions_car,
+                  type == 'Lotação' ? Icons.directions_car : Icons.airport_shuttle,
                   color: AppTheme.primaryStart,
                   size: 24,
                 ),
@@ -60,13 +62,37 @@ class VehicleManagementCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      brand,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          brand,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: type == 'Lotação' 
+                                ? Color(0xFFFEF3C7) 
+                                : Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: type == 'Lotação' 
+                                  ? Color(0xFFD97706) 
+                                  : Color(0xFF059669),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 2),
                     Text(

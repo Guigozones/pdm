@@ -144,6 +144,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                       child: VehicleManagementCard(
                         brand: vehicle.fullName,
                         plate: vehicle.plate,
+                        type: vehicle.type,
                         seats: vehicle.seats.toString(),
                         year: vehicle.year.toString(),
                         mileage: vehicle.mileage.toStringAsFixed(0),
@@ -171,6 +172,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     final capacityController = TextEditingController();
     final plateController = TextEditingController();
     final yearController = TextEditingController();
+    String selectedType = 'Van';
     String selectedStatus = 'Ativo';
     bool isLoading = false;
 
@@ -208,6 +210,109 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                         ],
                       ),
                       SizedBox(height: 20),
+
+                      // Tipo do Veículo (Van ou Lotação)
+                      Text(
+                        'Tipo de Veículo',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setDialogState(() => selectedType = 'Van');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: selectedType == 'Van'
+                                      ? AppTheme.primaryStart
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: selectedType == 'Van'
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.airport_shuttle,
+                                      size: 20,
+                                      color: selectedType == 'Van'
+                                          ? Colors.white
+                                          : Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Van',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: selectedType == 'Van'
+                                            ? Colors.white
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setDialogState(() => selectedType = 'Lotação');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: selectedType == 'Lotação'
+                                      ? AppTheme.primaryStart
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: selectedType == 'Lotação'
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.directions_car,
+                                      size: 20,
+                                      color: selectedType == 'Lotação'
+                                          ? Colors.white
+                                          : Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Lotação',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: selectedType == 'Lotação'
+                                            ? Colors.white
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
 
                       // Marca
                       _buildTextField(
@@ -340,6 +445,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                                         if (uid != null) {
                                           await _vehicleService.addVehicle(
                                             ownerId: uid,
+                                            type: selectedType,
                                             brand: brandController.text.trim(),
                                             model: modelController.text.trim(),
                                             plate: plateController.text.trim(),
@@ -437,6 +543,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
     final yearController = TextEditingController(text: vehicle.year.toString());
     final mileageController =
         TextEditingController(text: vehicle.mileage.toStringAsFixed(0));
+    String selectedType = vehicle.type;
     String selectedStatus = vehicle.status;
     bool isLoading = false;
 
@@ -474,6 +581,109 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                         ],
                       ),
                       SizedBox(height: 20),
+
+                      // Tipo do Veículo (Van ou Lotação)
+                      Text(
+                        'Tipo de Veículo',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setDialogState(() => selectedType = 'Van');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: selectedType == 'Van'
+                                      ? AppTheme.primaryStart
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: selectedType == 'Van'
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.airport_shuttle,
+                                      size: 20,
+                                      color: selectedType == 'Van'
+                                          ? Colors.white
+                                          : Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Van',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: selectedType == 'Van'
+                                            ? Colors.white
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setDialogState(() => selectedType = 'Lotação');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: selectedType == 'Lotação'
+                                      ? AppTheme.primaryStart
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: selectedType == 'Lotação'
+                                        ? AppTheme.primaryStart
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.directions_car,
+                                      size: 20,
+                                      color: selectedType == 'Lotação'
+                                          ? Colors.white
+                                          : Colors.grey.shade600,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Lotação',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: selectedType == 'Lotação'
+                                            ? Colors.white
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
 
                       // Marca
                       _buildTextField(
@@ -596,6 +806,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
 
                                       try {
                                         final updatedVehicle = vehicle.copyWith(
+                                          type: selectedType,
                                           brand: brandController.text.trim(),
                                           model: modelController.text.trim(),
                                           plate: plateController.text.trim(),

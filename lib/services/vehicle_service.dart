@@ -38,6 +38,7 @@ class VehicleService {
   /// Adiciona um novo veículo
   Future<VehicleModel> addVehicle({
     required String ownerId,
+    required String type,
     required String brand,
     required String model,
     required String plate,
@@ -52,6 +53,7 @@ class VehicleService {
     final vehicle = VehicleModel(
       id: docRef.id,
       ownerId: ownerId,
+      type: type,
       brand: brand,
       model: model,
       plate: plate.toUpperCase(),
