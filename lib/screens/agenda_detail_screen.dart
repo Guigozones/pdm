@@ -72,7 +72,9 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
   @override
   Widget build(BuildContext context) {
     int bookedSeats = widget.capacity - widget.available;
-    double occupancyRate = widget.capacity > 0 ? (bookedSeats / widget.capacity) * 100 : 0;
+    double occupancyRate = widget.capacity > 0
+        ? (bookedSeats / widget.capacity) * 100
+        : 0;
     int confirmedReservations = passengers.where((p) => p['paid']).length;
 
     return Scaffold(
@@ -87,9 +89,7 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 16),
-            child: Center(
-              child: Icon(Icons.notifications, size: 20),
-            ),
+            child: Center(child: Icon(Icons.notifications, size: 20)),
           ),
         ],
       ),
@@ -214,10 +214,10 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                     children: List.generate(
                       passengers.length,
                       (index) => Padding(
-                        padding: EdgeInsets.only(bottom: index < passengers.length - 1 ? 12 : 0),
-                        child: _passengerCard(
-                          passengers[index],
+                        padding: EdgeInsets.only(
+                          bottom: index < passengers.length - 1 ? 12 : 0,
                         ),
+                        child: _passengerCard(passengers[index]),
                       ),
                     ),
                   ),
@@ -367,7 +367,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       clientId: passenger['id'] ?? '',
                       clientName: passenger['name'] ?? 'Passageiro',
                       driverId: '', // TODO: passar o ID do motorista logado
-                      driverName: 'Motorista', // TODO: passar o nome do motorista logado
+                      driverName:
+                          'Motorista', // TODO: passar o nome do motorista logado
                     );
                     Navigator.push(
                       context,
@@ -388,7 +389,10 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       SizedBox(width: 6),
                       Text(
                         'Mensagem',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -415,7 +419,10 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       SizedBox(width: 6),
                       Text(
                         'Ver Perfil',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -523,7 +530,8 @@ class _AgendaDetailScreenState extends State<AgendaDetailScreen> {
                       clientId: passenger['id'] ?? '',
                       clientName: passenger['name'] ?? 'Passageiro',
                       driverId: '', // TODO: passar o ID do motorista logado
-                      driverName: 'Motorista', // TODO: passar o nome do motorista logado
+                      driverName:
+                          'Motorista', // TODO: passar o nome do motorista logado
                     );
                     Navigator.push(
                       context,

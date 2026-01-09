@@ -66,7 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _formatTime(dynamic timestamp) {
     if (timestamp == null) return '';
-    
+
     DateTime dateTime;
     if (timestamp is Timestamp) {
       dateTime = timestamp.toDate();
@@ -99,7 +99,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     widget.otherUserName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Text(
                     'Online',
@@ -126,7 +129,9 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Erro ao carregar mensagens: ${snapshot.error}'),
+                    child: Text(
+                      'Erro ao carregar mensagens: ${snapshot.error}',
+                    ),
                   );
                 }
 
@@ -183,7 +188,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 // Scroll para o fim quando novas mensagens chegam
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
-                    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                    _scrollController.jumpTo(
+                      _scrollController.position.maxScrollExtent,
+                    );
                   }
                 });
 
@@ -194,32 +201,42 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (context, index) {
                     final messageDoc = messages[index];
                     final message = messageDoc.data() as Map<String, dynamic>;
-                    final isSentByMe = message['senderType'] == widget.senderType;
+                    final isSentByMe =
+                        message['senderType'] == widget.senderType;
                     final time = _formatTime(message['timestamp']);
 
                     return Align(
-                      alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isSentByMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Column(
-                          crossAxisAlignment:
-                              isSentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isSentByMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
                             Container(
                               constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.75,
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSentByMe ? AppTheme.accent : const Color(0xFFF3F4F6),
+                                color: isSentByMe
+                                    ? AppTheme.accent
+                                    : const Color(0xFFF3F4F6),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(12),
                                   topRight: const Radius.circular(12),
-                                  bottomLeft: isSentByMe 
-                                      ? const Radius.circular(12) 
+                                  bottomLeft: isSentByMe
+                                      ? const Radius.circular(12)
                                       : const Radius.circular(4),
-                                  bottomRight: isSentByMe 
-                                      ? const Radius.circular(4) 
+                                  bottomRight: isSentByMe
+                                      ? const Radius.circular(4)
                                       : const Radius.circular(12),
                                 ),
                               ),
@@ -228,7 +245,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
-                                  color: isSentByMe ? Colors.white : AppTheme.textDark,
+                                  color: isSentByMe
+                                      ? Colors.white
+                                      : AppTheme.textDark,
                                 ),
                               ),
                             ),
@@ -296,9 +315,14 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
-                          borderSide: const BorderSide(color: AppTheme.primaryStart),
+                          borderSide: const BorderSide(
+                            color: AppTheme.primaryStart,
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
@@ -310,10 +334,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white, size: 18),
+                      icon: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       onPressed: _sendMessage,
                       padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
                     ),
                   ),
                 ],

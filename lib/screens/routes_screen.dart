@@ -28,7 +28,15 @@ class _RoutesScreenState extends State<RoutesScreen> {
   String selectedStatus = 'Ativa';
   List<String> selectedWeekDays = [];
 
-  static const List<String> allWeekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+  static const List<String> allWeekDays = [
+    'Seg',
+    'Ter',
+    'Qua',
+    'Qui',
+    'Sex',
+    'Sab',
+    'Dom',
+  ];
 
   @override
   void dispose() {

@@ -260,7 +260,11 @@ class RouteManagementCard extends StatelessWidget {
             children: [
               Expanded(
                 child: IconButton(
-                  icon: Icon(Icons.edit, size: 20, color: AppTheme.primaryStart),
+                  icon: Icon(
+                    Icons.edit,
+                    size: 20,
+                    color: AppTheme.primaryStart,
+                  ),
                   onPressed: onEdit,
                 ),
               ),

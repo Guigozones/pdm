@@ -27,9 +27,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
     return Column(
       children: [
         _buildSearchBar(),
-        Expanded(
-          child: _buildChatList(),
-        ),
+        Expanded(child: _buildChatList()),
       ],
     );
   }
@@ -61,7 +59,10 @@ class _ConversasScreenState extends State<ConversasScreen> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.primaryStart),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 10,
+            horizontal: 12,
+          ),
         ),
       ),
     );
@@ -100,9 +101,14 @@ class _ConversasScreenState extends State<ConversasScreen> {
         final filteredChats = sortedChats.where((doc) {
           if (searchQuery.isEmpty) return true;
           final data = doc.data() as Map<String, dynamic>;
-          final clientName = (data['clientName'] ?? '').toString().toLowerCase();
-          final lastMessage = (data['lastMessage'] ?? '').toString().toLowerCase();
-          return clientName.contains(searchQuery) || lastMessage.contains(searchQuery);
+          final clientName = (data['clientName'] ?? '')
+              .toString()
+              .toLowerCase();
+          final lastMessage = (data['lastMessage'] ?? '')
+              .toString()
+              .toLowerCase();
+          return clientName.contains(searchQuery) ||
+              lastMessage.contains(searchQuery);
         }).toList();
 
         if (filteredChats.isEmpty) {
@@ -141,15 +147,12 @@ class _ConversasScreenState extends State<ConversasScreen> {
           itemBuilder: (context, index) {
             final chatDoc = filteredChats[index];
             final chat = chatDoc.data() as Map<String, dynamic>;
-            
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: index < filteredChats.length - 1 ? 12 : 0,
               ),
-              child: _ConversaCard(
-                chatId: chatDoc.id,
-                chat: chat,
-              ),
+              child: _ConversaCard(chatId: chatDoc.id, chat: chat),
             );
           },
         );
@@ -163,14 +166,11 @@ class _ConversaCard extends StatelessWidget {
   final String chatId;
   final Map<String, dynamic> chat;
 
-  const _ConversaCard({
-    required this.chatId,
-    required this.chat,
-  });
+  const _ConversaCard({required this.chatId, required this.chat});
 
   String _formatTime(dynamic timestamp) {
     if (timestamp == null) return '';
-    
+
     DateTime dateTime;
     if (timestamp is Timestamp) {
       dateTime = timestamp.toDate();
@@ -218,10 +218,14 @@ class _ConversaCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isUnread ? AppTheme.primaryStart.withOpacity(0.05) : Colors.white,
+          color: isUnread
+              ? AppTheme.primaryStart.withOpacity(0.05)
+              : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isUnread ? AppTheme.primaryStart.withOpacity(0.2) : Colors.grey.shade200,
+            color: isUnread
+                ? AppTheme.primaryStart.withOpacity(0.2)
+                : Colors.grey.shade200,
             width: 1.5,
           ),
         ),
@@ -242,7 +246,11 @@ class _ConversaCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Center(
-                        child: Icon(Icons.person, size: 20, color: AppTheme.primaryStart),
+                        child: Icon(
+                          Icons.person,
+                          size: 20,
+                          color: AppTheme.primaryStart,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -260,7 +268,10 @@ class _ConversaCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'Passageiro',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ],
                     ),
@@ -280,7 +291,10 @@ class _ConversaCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     if (isUnread)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryStart,
                           borderRadius: BorderRadius.circular(12),

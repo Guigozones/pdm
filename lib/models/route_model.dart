@@ -10,7 +10,8 @@ class RouteModel {
   final int availableSeats;
   final String duration;
   final List<String> timeSlots;
-  final List<String> weekDays; // Dias da semana: 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'
+  final List<String>
+  weekDays; // Dias da semana: 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'
   final String status; // 'Ativa', 'Pausada', 'Inativa'
   final int tripsPerWeek;
   final DateTime? createdAt;
@@ -42,7 +43,8 @@ class RouteModel {
 
   String get tripsText => '$tripsPerWeek viagens/semana';
 
-  String get weekDaysText => weekDays.isNotEmpty ? weekDays.join(', ') : 'Não definido';
+  String get weekDaysText =>
+      weekDays.isNotEmpty ? weekDays.join(', ') : 'Não definido';
 
   factory RouteModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -59,8 +61,8 @@ class RouteModel {
       weekDays: List<String>.from(data['weekDays'] ?? []),
       status: data['status'] ?? 'Ativa',
       tripsPerWeek: data['tripsPerWeek'] ?? 0,
-      createdAt: data['createdAt'] != null 
-          ? (data['createdAt'] as Timestamp).toDate() 
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
           : null,
     );
   }

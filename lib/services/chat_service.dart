@@ -12,7 +12,7 @@ class ChatService {
     if (currentUserId == null) {
       return const Stream.empty();
     }
-    
+
     // Sem orderBy para evitar necessidade de índice composto
     // A ordenação será feita na UI
     return _firestore
@@ -26,7 +26,7 @@ class ChatService {
     if (currentUserId == null) {
       return const Stream.empty();
     }
-    
+
     // Sem orderBy para evitar necessidade de índice composto
     return _firestore
         .collection('chats')
@@ -79,7 +79,7 @@ class ChatService {
 
     // Busca mensagens não lidas que não foram enviadas pelo usuário atual
     final otherSenderType = senderType == 'driver' ? 'client' : 'driver';
-    
+
     final unreadMessages = await _firestore
         .collection('messages')
         .where('chatId', isEqualTo: chatId)
@@ -95,9 +95,7 @@ class ChatService {
     await batch.commit();
 
     // Zera o contador de não lidas no chat
-    await _firestore.collection('chats').doc(chatId).update({
-      'unreadCount': 0,
-    });
+    await _firestore.collection('chats').doc(chatId).update({'unreadCount': 0});
   }
 
   /// Cria ou busca um chat existente entre motorista e cliente
